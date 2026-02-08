@@ -3,10 +3,16 @@ import type NaturalLinkPlugin from "./main";
 import { t } from "./i18n";
 
 export interface NaturalLinkSettings {
-	// Reserved for future settings (e.g. language selection)
+	/** Schema version for future migrations */
+	version: number;
+	/** Whether to include unresolved links (non-existing notes) in search results */
+	searchNonExistingNotes: boolean;
 }
 
-export const DEFAULT_SETTINGS: NaturalLinkSettings = {};
+export const DEFAULT_SETTINGS: NaturalLinkSettings = {
+	version: 1,
+	searchNonExistingNotes: true,
+};
 
 export class NaturalLinkSettingTab extends PluginSettingTab {
 	plugin: NaturalLinkPlugin;
@@ -19,6 +25,18 @@ export class NaturalLinkSettingTab extends PluginSettingTab {
 	display(): void {
 		const { containerEl } = this;
 		containerEl.empty();
+
+		new Setting(containerEl)
+			.setName(t("settings.search-non-existing-notes"))
+			.setDesc(t("settings.search-non-existing-notes-description"))
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.searchNonExistingNotes)
+					.onChange(async (value) => {
+						this.plugin.settings.searchNonExistingNotes = value;
+						await this.plugin.saveSettings();
+					}),
+			);
 
 		new Setting(containerEl)
 			.setName(t("settings.hotkey-button"))

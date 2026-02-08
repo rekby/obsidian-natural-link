@@ -27,6 +27,10 @@ export default class NaturalLinkPlugin extends Plugin {
 
 	private openNaturalLinkModal(editor: Editor): void {
 		const notes = this.collectNotes();
+		if (this.settings.searchNonExistingNotes) {
+			const unresolvedNotes = this.collectUnresolvedNotes(notes);
+			notes.push(...unresolvedNotes);
+		}
 		const stemmer = new MultiStemmer([
 			new RussianStemmer(),
 			new EnglishStemmer(),
@@ -44,7 +48,7 @@ export default class NaturalLinkPlugin extends Plugin {
 			const cache = this.app.metadataCache.getFileCache(file);
 			const aliases: string[] = [];
 			if (cache?.frontmatter?.aliases) {
-				const raw = cache.frontmatter.aliases;
+				const raw: unknown = cache.frontmatter.aliases;
 				if (Array.isArray(raw)) {
 					for (const a of raw) {
 						if (typeof a === "string") {
@@ -61,6 +65,34 @@ export default class NaturalLinkPlugin extends Plugin {
 				aliases,
 			};
 		});
+	}
+
+	/**
+	 * Collect NoteInfo[] from unresolved links (references to notes that don't exist yet).
+	 * Deduplicates against existing notes and within unresolved links themselves.
+	 */
+	private collectUnresolvedNotes(existingNotes: NoteInfo[]): NoteInfo[] {
+		const existingTitles = new Set(existingNotes.map((n) => n.title.toLowerCase()));
+		const unresolvedLinks = this.app.metadataCache.unresolvedLinks;
+		const seenTitles = new Set<string>();
+		const result: NoteInfo[] = [];
+
+		for (const destinations of Object.values(unresolvedLinks)) {
+			for (const linkText of Object.keys(destinations)) {
+				const lower = linkText.toLowerCase();
+				if (existingTitles.has(lower) || seenTitles.has(lower)) {
+					continue;
+				}
+				seenTitles.add(lower);
+				result.push({
+					path: `${linkText}.md`,
+					title: linkText,
+					aliases: [],
+					exists: false,
+				});
+			}
+		}
+		return result;
 	}
 
 	async loadSettings() {

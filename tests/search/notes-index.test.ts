@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { NotesIndex } from "../../src/search/notes-index";
-import { NoteInfo, Stemmer } from "../../src/types";
+import { NoteInfo } from "../../src/types";
 import { RussianStemmer } from "../../src/stemming/russian-stemmer";
 import { EnglishStemmer } from "../../src/stemming/english-stemmer";
 import { MultiStemmer } from "../../src/stemming/multi-stemmer";

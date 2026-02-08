@@ -6,3 +6,10 @@
 	font-size: var(--font-smallest);
 	color: var(--text-muted);
 }
+
+.natural-link-not-created {
+	font-size: var(--font-smallest);
+	color: var(--text-faint);
+	font-style: italic;
+	margin-left: 0.5em;
+}

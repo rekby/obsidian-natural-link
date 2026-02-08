@@ -11,4 +11,8 @@ export const ru: Partial<typeof en> = {
 	"settings.title": "Natural Link",
 	"settings.hotkey-button": "Назначить горячую клавишу",
 	"settings.hotkey-description": "Назначьте горячую клавишу для быстрой вставки естественных ссылок",
+	"modal.note-not-created": "(ещё не создана)",
+	"settings.search-non-existing-notes": "Искать несуществующие заметки",
+	"settings.search-non-existing-notes-description":
+		"Включить в результаты поиска заметки, на которые есть ссылки, но которые ещё не созданы",
 };

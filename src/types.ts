@@ -17,6 +17,8 @@ export interface NoteInfo {
 	title: string;
 	/** Aliases from frontmatter */
 	aliases: string[];
+	/** Whether the note file exists in the vault. Defaults to true if omitted. */
+	exists?: boolean;
 }
 
 /**

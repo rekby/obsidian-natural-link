@@ -15,7 +15,7 @@
 ```
 src/
   main.ts                      # Plugin entry point, lifecycle, command registration
-  settings.ts                  # Settings tab with hotkey button
+  settings.ts                  # Settings tab (version, searchNonExistingNotes toggle, hotkey button)
   types.ts                     # Core interfaces: Stemmer, NoteInfo, SearchResult
   snowball-stemmers.d.ts       # Type declarations for snowball-stemmers library
   stemming/
@@ -60,9 +60,14 @@ tests/
 4. Partial matches allowed (not all query words need to match), ranked lower
 5. Ranking: query match ratio (0.5) + source specificity (0.4) + title bonus (0.1)
 
+### Settings
+
+- **`version`** (`number`): Schema version for future migrations. Current: `1`.
+- **`searchNonExistingNotes`** (`boolean`, default `true`): When enabled, search results include notes referenced by `[[links]]` that don't exist yet as files. Uses `metadataCache.unresolvedLinks` to collect unresolved link targets, deduplicates against existing notes.
+
 ### Data flow
 
-1. User invokes command → `main.ts` collects `NoteInfo[]` from Obsidian API (`vault.getMarkdownFiles()` + `metadataCache`)
+1. User invokes command → `main.ts` collects `NoteInfo[]` from Obsidian API (`vault.getMarkdownFiles()` + `metadataCache`). If `searchNonExistingNotes` is enabled, also collects unresolved link targets via `metadataCache.unresolvedLinks`.
 2. Builds `NotesIndex(notes, multiStemmer)`
 3. Opens `NaturalLinkModal` with the index
 4. On each keystroke: `index.search(query)` returns ranked results

@@ -47,7 +47,12 @@ export class NaturalLinkModal extends SuggestModal<SearchResult> {
 				cls: "suggestion-note natural-link-matched-alias",
 			});
 		}
-		if (result.note.path !== `${result.note.title}.md`) {
+		if (result.note.exists === false) {
+			el.createEl("small", {
+				text: t("modal.note-not-created"),
+				cls: "suggestion-note natural-link-not-created",
+			});
+		} else if (result.note.path !== `${result.note.title}.md`) {
 			el.createEl("small", { text: result.note.path, cls: "suggestion-path" });
 		}
 	}

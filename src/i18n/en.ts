@@ -9,4 +9,8 @@ export const en = {
 	"settings.title": "Natural Link",
 	"settings.hotkey-button": "Set hotkey",
 	"settings.hotkey-description": "Assign a keyboard shortcut to quickly insert natural links",
+	"modal.note-not-created": "(not yet created)",
+	"settings.search-non-existing-notes": "Search non-existing notes",
+	"settings.search-non-existing-notes-description":
+		"Include notes that are referenced by links but do not exist yet in the vault",
 };
