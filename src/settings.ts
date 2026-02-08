@@ -42,6 +42,7 @@ export class NaturalLinkSettingTab extends PluginSettingTab {
 					activeTab?: {
 						searchComponent?: {
 							setValue(value: string): void;
+							inputEl?: HTMLInputElement;
 						};
 					};
 				};
@@ -50,11 +51,16 @@ export class NaturalLinkSettingTab extends PluginSettingTab {
 			if (app.setting) {
 				app.setting.open();
 				app.setting.openTabById("hotkeys");
-				// Small delay to let the tab render before setting the filter
+				// Delay to let the tab render before setting the filter
 				setTimeout(() => {
-					app.setting?.activeTab?.searchComponent?.setValue(
-						"Natural Link",
-					);
+					const searchComponent = app.setting?.activeTab?.searchComponent;
+					if (searchComponent) {
+						searchComponent.setValue("Natural Link");
+						// Dispatch input event to trigger the actual filtering
+						searchComponent.inputEl?.dispatchEvent(
+							new Event("input", { bubbles: true }),
+						);
+					}
 				}, 100);
 			}
 		} catch {

@@ -44,14 +44,9 @@ export class NaturalLinkModal extends SuggestModal<SearchResult> {
 		const displayText = this.lastQuery.trim();
 		const noteTitle = result.note.title;
 
-		let link: string;
-		if (displayText.toLowerCase() === noteTitle.toLowerCase()) {
-			// Display text matches title — simple link
-			link = `[[${noteTitle}]]`;
-		} else {
-			// Display text differs — use piped link
-			link = `[[${noteTitle}|${displayText}]]`;
-		}
+		// Always use piped link to preserve the user's original text as display.
+		// This ensures renaming the note won't change how the link looks in text.
+		const link = `[[${noteTitle}|${displayText}]]`;
 
 		this.editor.replaceSelection(link);
 	}
