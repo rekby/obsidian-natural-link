@@ -101,6 +101,20 @@ describe("NotesIndex", () => {
 			expect(results.length).toBe(1);
 		});
 
+		it("finds note when last word is a longer form prefix (reverse prefix)", () => {
+			// "runni" is the start of "running", whose stem is "run" — should match "Run"
+			const index = new NotesIndex([makeNote("Run is good")], stemmer);
+			const results = index.search("runni");
+			expect(results.length).toBe(1);
+			expect(results[0]!.note.title).toBe("Run is good");
+		});
+
+		it("finds note by reverse prefix with multiple words", () => {
+			const index = new NotesIndex([makeNote("Run is good")], stemmer);
+			const results = index.search("good runni");
+			expect(results.length).toBe(1);
+		});
+
 		it("does not match when prefix does not match any word", () => {
 			const index = new NotesIndex([makeNote("Деревянная коробка")], stemmer);
 			const results = index.search("металл");

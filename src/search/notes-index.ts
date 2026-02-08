@@ -162,6 +162,24 @@ export class NotesIndex {
 				}
 			}
 		}
+		// Reverse prefix: check if lastToken starts with a source stem or token.
+		// Handles the case where the user is typing a longer word form (e.g. "runni"
+		// for "running") and the note contains the base form ("Run").
+		// Require minimum stem/token length of 3 to avoid false positives from
+		// very short words.
+		const MIN_REVERSE_PREFIX_LEN = 3;
+		for (const token of sourceTokens) {
+			if (token.length >= MIN_REVERSE_PREFIX_LEN && lastToken.startsWith(token)) {
+				return true;
+			}
+		}
+		for (const stems of sourceStems) {
+			for (const stem of stems) {
+				if (stem.length >= MIN_REVERSE_PREFIX_LEN && lastToken.startsWith(stem)) {
+					return true;
+				}
+			}
+		}
 		return false;
 	}
 }
