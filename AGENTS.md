@@ -19,7 +19,7 @@ src/
   types.ts                     # Core interfaces: Stemmer, NoteInfo, SearchResult
   snowball-stemmers.d.ts       # Type declarations for snowball-stemmers library
   stemming/
-    russian-stemmer.ts         # Russian stemmer (Snowball algorithm)
+    russian-stemmer.ts         # Russian stemmer (Snowball algorithm, ё→е normalization)
     english-stemmer.ts         # English stemmer (Snowball algorithm)
     multi-stemmer.ts           # Composite stemmer: combines multiple language stemmers
   search/
@@ -47,7 +47,7 @@ tests/
 
 ### Key modules
 
-- **Stemmer interface** (`types.ts`): `stem(word: string): string[]`. Implementations wrap the `snowball-stemmers` library. `MultiStemmer` composes multiple language stemmers and deduplicates results.
+- **Stemmer interface** (`types.ts`): `stem(word: string): string[]`. Implementations wrap the `snowball-stemmers` library. `RussianStemmer` normalizes `ё` → `е` before stemming (Snowball doesn't recognize `ё`). `MultiStemmer` composes multiple language stemmers and deduplicates results.
 - **NotesIndex** (`search/notes-index.ts`): Built from `NoteInfo[]` + `Stemmer`. Provides `search(query): SearchResult[]`. Handles tokenization, stemming, prefix matching for incomplete last word, and ranking internally. Built once per modal open.
 - **i18n** (`i18n/`): Simple key-value translations. `en.ts` is the base language (all keys required). Other locales use `Partial<typeof en>` for compile-time key validation. Locale detected via `moment.locale()`.
 - **NaturalLinkModal** (`ui/natural-link-modal.ts`): Obsidian `SuggestModal`. Gets `NotesIndex` in constructor. Inserts `[[NoteTitle|userInput]]` on selection. Supports Shift+Enter to insert `[[rawInput|rawInput]]` bypassing search results.

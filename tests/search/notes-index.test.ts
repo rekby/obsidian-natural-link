@@ -183,4 +183,25 @@ describe("NotesIndex", () => {
 			expect(results.length).toBe(1);
 		});
 	});
+
+	describe("ё normalization", () => {
+		it("finds note 'костыль' by query 'костылём'", () => {
+			const index = new NotesIndex([makeNote("костыль")], stemmer);
+			const results = index.search("костылём");
+			expect(results.length).toBe(1);
+			expect(results[0]!.note.title).toBe("костыль");
+		});
+
+		it("finds note with ё in title by query without ё", () => {
+			const index = new NotesIndex([makeNote("ёлка")], stemmer);
+			const results = index.search("елки");
+			expect(results.length).toBe(1);
+		});
+
+		it("finds note without ё in title by query with ё", () => {
+			const index = new NotesIndex([makeNote("елка")], stemmer);
+			const results = index.search("ёлки");
+			expect(results.length).toBe(1);
+		});
+	});
 });
