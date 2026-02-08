@@ -1,90 +1,73 @@
-# Obsidian Sample Plugin
+# Natural Link
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+An Obsidian plugin that lets you create links to notes using natural word forms. Type a word in any grammatical form and the plugin will find matching notes regardless of declension, conjugation, or word order.
 
-This project uses TypeScript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in TypeScript Definition format, which contains TSDoc comments describing what it does.
+## Features
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open modal (simple)" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+- **Morphological search**: Find notes by any word form. Searching for "деревянную коробку" will match a note titled "Деревянная коробка".
+- **Prefix matching**: Results update as you type. Even incomplete words match — typing "кор" will find "Коробка".
+- **Alias support**: Searches across note titles and frontmatter aliases.
+- **Word order independence**: "коробку деревянную" finds "Деревянная коробка".
+- **Multi-language**: Russian and English stemming work simultaneously. The plugin determines word stems algorithmically, no dictionaries required.
+- **Preserved display text**: Links are always created as `[[Note Title|your input]]`, so your original text is preserved even if the note is renamed.
+- **Localized UI**: Interface available in English and Russian. Language follows your Obsidian settings.
 
-## First time developing plugins?
+## Usage
 
-Quick starting guide for new plugin devs:
+1. Open the command palette (Cmd/Ctrl+P) and run **Insert natural link**, or use your assigned hotkey.
+2. Start typing the word or phrase you want to link.
+3. Select a matching note from the suggestions.
+4. The plugin inserts a wikilink: `[[Matched Note|your typed text]]`.
 
-- Check if [someone already developed a plugin for what you want](https://obsidian.md/plugins)! There might be an existing plugin similar enough that you can partner up with.
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `main.ts` to `main.js`.
-- Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
+### Recommended hotkey
 
-## Releasing new releases
+The plugin does not assign a hotkey by default. We recommend **Cmd/Ctrl+Shift+K** (next to Cmd+K which is "Insert link" in Obsidian). To set it up:
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
+1. Go to **Settings → Hotkeys**
+2. Search for "Natural Link"
+3. Assign your preferred shortcut
 
-> You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
-> The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
+You can also open the hotkey settings directly from the plugin's settings tab.
 
-## Adding your plugin to the community plugin list
+## Examples
 
-- Check the [plugin guidelines](https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines).
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
+| You type | Note found | Link created |
+|----------|-----------|--------------|
+| деревянную коробку | Деревянная коробка | `[[Деревянная коробка\|деревянную коробку]]` |
+| коробку | Деревянная коробка | `[[Деревянная коробка\|коробку]]` |
+| кор | Коробка | `[[Коробка\|кор]]` |
+| running shoes | Running shoes | `[[Running shoes\|running shoes]]` |
+| run shoe | Running shoes | `[[Running shoes\|run shoe]]` |
 
-## How to use
+## Installation
 
-- Clone this repo.
-- Make sure your NodeJS is at least v16 (`node --version`).
-- `npm i` or `yarn` to install dependencies.
-- `npm run dev` to start compilation in watch mode.
+### From Obsidian Community Plugins
 
-## Manually installing the plugin
+*(Coming soon)*
 
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
+### Manual installation
 
-## Improve code quality with eslint
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code. 
-- This project already has eslint preconfigured, you can invoke a check by running`npm run lint`
-- Together with a custom eslint [plugin](https://github.com/obsidianmd/eslint-plugin) for Obsidan specific code guidelines.
-- A GitHub action is preconfigured to automatically lint every commit on all branches.
+1. Download `main.js`, `manifest.json`, and `styles.css` from the latest release.
+2. Create a folder `<Vault>/.obsidian/plugins/obsidian-natural-link/`.
+3. Copy the downloaded files into that folder.
+4. Reload Obsidian and enable **Natural Link** in **Settings → Community plugins**.
 
-## Funding URL
+## Development
 
-You can include funding URLs where people who use your plugin can financially support it.
-
-The simple way is to set the `fundingUrl` field to your link in your `manifest.json` file:
-
-```json
-{
-    "fundingUrl": "https://buymeacoffee.com"
-}
+```bash
+npm install          # Install dependencies
+npm run dev          # Watch mode
+npm run build        # Type check + production build
+npm test             # Run tests
+npm run test:watch   # Watch mode tests
+npm run lint         # Lint
 ```
 
-If you have multiple URLs, you can also do:
+## Known limitations
 
-```json
-{
-    "fundingUrl": {
-        "Buy Me a Coffee": "https://buymeacoffee.com",
-        "GitHub Sponsor": "https://github.com/sponsors",
-        "Patreon": "https://www.patreon.com/"
-    }
-}
-```
+- **Consonant alternations**: Snowball stemming is algorithmic and does not handle root consonant changes (e.g. "бег" and "бежать" have different stems). Full lemmatization support is planned for a future release.
+- **No typo tolerance**: Currently matches are exact on stems. Fuzzy matching is planned.
 
-## API Documentation
+## License
 
-See https://docs.obsidian.md
+[0-BSD](LICENSE)
