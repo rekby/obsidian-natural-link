@@ -117,7 +117,7 @@ npm run lint         # ESLint
 
 ## Plugin command
 
-- **ID**: `insert-natural-link`
+- **ID**: `insert-link`
 - **Type**: `editorCallback` (available only when editor is active)
 - **No default hotkey assigned**. Recommended: Cmd/Ctrl+Shift+K (documented in README). User assigns via Settings → Hotkeys.
 
