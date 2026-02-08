@@ -15,7 +15,7 @@ export default class NaturalLinkPlugin extends Plugin {
 		await this.loadSettings();
 
 		this.addCommand({
-			id: "insert-natural-link",
+			id: "insert-link",
 			name: t("command.natural-link"),
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.openNaturalLinkModal(editor);
