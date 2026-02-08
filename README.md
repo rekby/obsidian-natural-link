@@ -40,9 +40,6 @@ You can also open the hotkey settings directly from the plugin's settings tab.
 
 | You type | Note found | Link created |
 |----------|-----------|--------------|
-| деревянную коробку | Деревянная коробка | `[[Деревянная коробка\|деревянную коробку]]` |
-| коробку | Деревянная коробка | `[[Деревянная коробка\|коробку]]` |
-| кор | Коробка | `[[Коробка\|кор]]` |
 | running shoes | Running shoes | `[[Running shoes\|running shoes]]` |
 | run shoe | Running shoes | `[[Running shoes\|run shoe]]` |
 
@@ -93,4 +90,4 @@ npm run lint         # Lint
 
 ## License
 
-[0-BSD](LICENSE)
+[MIT](LICENSE)
