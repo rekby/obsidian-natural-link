@@ -4,6 +4,8 @@
 
 An Obsidian plugin that lets you create links to notes using natural word forms. Type a word in any grammatical form and the plugin will find matching notes regardless of declension, conjugation, or word order.
 
+![Search example: typing "runnin" finds the note "Run is good"](Screenshot.png)
+
 ## Features
 
 - **Morphological search**: Find notes by any word form. Searching for "деревянную коробку" will match a note titled "Деревянная коробка".
