@@ -47,4 +47,24 @@ describe("RussianStemmer", () => {
 		expect(result.length).toBe(1);
 		expect(typeof result[0]).toBe("string");
 	});
+
+	it("normalizes ё to е so that ё-forms match е-forms", () => {
+		// костылём (with ё) must produce the same stem as костылем (with е)
+		expect(stemmer.stem("костылём")[0]).toBe(stemmer.stem("костылем")[0]);
+		// and the same stem as the base form
+		expect(stemmer.stem("костылём")[0]).toBe(stemmer.stem("костыль")[0]);
+	});
+
+	it("stems ё-words consistently across noun cases", () => {
+		const stems = [
+			stemmer.stem("ёлка"),
+			stemmer.stem("елка"),
+			stemmer.stem("ёлки"),
+			stemmer.stem("елки"),
+			stemmer.stem("ёлке"),
+			stemmer.stem("ёлкой"),
+		];
+		const unique = new Set(stems.map((s) => s[0]));
+		expect(unique.size).toBe(1);
+	});
 });

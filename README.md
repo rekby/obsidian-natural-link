@@ -4,6 +4,8 @@
 
 An Obsidian plugin that lets you create links to notes using natural word forms. Type a word in any grammatical form and the plugin will find matching notes regardless of declension, conjugation, or word order.
 
+![Search example: typing "runnin" finds the note "Run is good"](Screenshot.png)
+
 ## Features
 
 - **Morphological search**: Find notes by any word form. Searching for "деревянную коробку" will match a note titled "Деревянная коробка".
@@ -48,11 +50,27 @@ You can also open the hotkey settings directly from the plugin's settings tab.
 
 ### From Obsidian Community Plugins
 
-*(Coming soon)*
+> **Status**: The plugin has been submitted to the official community plugin list and is awaiting review. Once approved, it will be available directly from Obsidian.
+
+1. Open **Settings → Community plugins → Browse**.
+2. Search for **Natural Link**.
+3. Click **Install**, then **Enable**.
+
+### Via BRAT (recommended while awaiting official listing)
+
+[BRAT](https://github.com/TfTHacker/obsidian42-brat) (Beta Reviewers Auto-update Tester) lets you install plugins directly from GitHub and keeps them up to date automatically.
+
+1. Install the **BRAT** plugin from Obsidian Community Plugins if you haven't already.
+2. Open **Settings → BRAT → Add Beta plugin**.
+3. Enter the repository URL: `https://github.com/rekby/obsidian-natural-link`
+4. Click **Add Plugin**.
+5. Enable **Natural Link** in **Settings → Community plugins**.
+
+BRAT will automatically check for updates and keep the plugin current.
 
 ### Manual installation
 
-1. Download `main.js`, `manifest.json`, and `styles.css` from the latest release.
+1. Download `main.js`, `manifest.json`, and `styles.css` from the [latest release](https://github.com/rekby/obsidian-natural-link/releases/latest).
 2. Create a folder `<Vault>/.obsidian/plugins/obsidian-natural-link/`.
 3. Copy the downloaded files into that folder.
 4. Reload Obsidian and enable **Natural Link** in **Settings → Community plugins**.
