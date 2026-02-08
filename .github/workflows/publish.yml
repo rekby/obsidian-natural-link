@@ -1,0 +1,63 @@
+name: Publish Release
+
+on:
+    workflow_dispatch:
+        inputs:
+            version-part:
+                description: Part of version number for change
+                required: true
+                type: choice
+                options:
+                    - minor
+                    - patch
+            release-title:
+                description: Title for the release
+                required: false
+                type: string
+permissions:
+    contents: write
+jobs:
+    release:
+        runs-on: ubuntu-latest
+        steps:
+            - name: checkout
+              uses: actions/checkout@v4
+
+            - name: install nodejs
+              uses: actions/setup-node@v4
+              with:
+                  node-version: '22'
+
+            - name: git config
+              run: |
+                  git config user.email github-robot@github.com
+                  git config user.name github-robot
+
+            - name: up version
+              id: bump-version
+              run: |
+                npm config set tag-version-prefix ""
+                npm version "${{ github.event.inputs.version-part }}"
+                VERSION=$(grep '"version"' manifest.json | cut -d '"' -f 4)
+                echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+            - name: build
+              run: |
+                npm ci
+                npm run build
+
+            - name: push tag to github
+              run: |
+                git push origin
+                git push origin --tags
+
+            - name: create release
+              uses: softprops/action-gh-release@v2
+              with:
+                  name: ${{ steps.bump-version.outputs.version }} ${{ github.event.inputs.release-title }}
+                  tag_name: ${{ steps.bump-version.outputs.version }}
+                  generate_release_notes: true
+                  files: |
+                      main.js
+                      manifest.json
+                      styles.css
