@@ -1,11 +1,10 @@
 {
-	"id": "sample-plugin",
-	"name": "Sample Plugin",
-	"version": "1.0.0",
+	"id": "obsidian-natural-link",
+	"name": "Natural Link",
+	"version": "0.1.0",
 	"minAppVersion": "0.15.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"description": "Create links to notes using natural word forms. Finds matching notes regardless of word declension or order.",
+	"author": "rekby",
+	"authorUrl": "https://github.com/rekby",
 	"isDesktopOnly": false
 }

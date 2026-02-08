@@ -1,0 +1,66 @@
+import { App, Editor, SuggestModal } from "obsidian";
+import { NotesIndex } from "../search/notes-index";
+import { SearchResult } from "../types";
+import { t } from "../i18n";
+
+/**
+ * Modal for searching notes by natural word forms.
+ * Shows suggestions as the user types, inserts a wikilink on selection.
+ */
+export class NaturalLinkModal extends SuggestModal<SearchResult> {
+	private readonly index: NotesIndex;
+	private readonly editor: Editor;
+	private lastQuery: string;
+
+	constructor(app: App, editor: Editor, index: NotesIndex) {
+		super(app);
+		this.index = index;
+		this.editor = editor;
+		this.lastQuery = "";
+		this.setPlaceholder(t("modal.placeholder"));
+		this.setInstructions([
+			{ command: "↑↓", purpose: "navigate" },
+			{ command: "↵", purpose: "insert link" },
+			{ command: "esc", purpose: "dismiss" },
+		]);
+	}
+
+	getSuggestions(query: string): SearchResult[] {
+		this.lastQuery = query;
+		if (query.trim().length === 0) {
+			return [];
+		}
+		return this.index.search(query);
+	}
+
+	renderSuggestion(result: SearchResult, el: HTMLElement): void {
+		el.createEl("div", { text: result.note.title, cls: "suggestion-title" });
+		if (result.note.path !== `${result.note.title}.md`) {
+			el.createEl("small", { text: result.note.path, cls: "suggestion-path" });
+		}
+	}
+
+	onChooseSuggestion(result: SearchResult, _evt: MouseEvent | KeyboardEvent): void {
+		const displayText = this.lastQuery.trim();
+		const noteTitle = result.note.title;
+
+		let link: string;
+		if (displayText.toLowerCase() === noteTitle.toLowerCase()) {
+			// Display text matches title — simple link
+			link = `[[${noteTitle}]]`;
+		} else {
+			// Display text differs — use piped link
+			link = `[[${noteTitle}|${displayText}]]`;
+		}
+
+		this.editor.replaceSelection(link);
+	}
+
+	onNoSuggestion(): void {
+		this.resultContainerEl.empty();
+		this.resultContainerEl.createEl("div", {
+			text: t("modal.no-results"),
+			cls: "suggestion-empty",
+		});
+	}
+}
