@@ -1,3 +1,5 @@
+*Читайте на [русском](README.ru.md).*
+
 # Natural Link
 
 An Obsidian plugin that lets you create links to notes using natural word forms. Type a word in any grammatical form and the plugin will find matching notes regardless of declension, conjugation, or word order.
@@ -9,6 +11,7 @@ An Obsidian plugin that lets you create links to notes using natural word forms.
 - **Alias support**: Searches across note titles and frontmatter aliases.
 - **Word order independence**: "коробку деревянную" finds "Деревянная коробка".
 - **Multi-language**: Russian and English stemming work simultaneously. The plugin determines word stems algorithmically, no dictionaries required.
+- **Insert link as typed**: Press **Shift+Enter** to insert a link with your exact input as both target and display text, bypassing search results.
 - **Preserved display text**: Links are always created as `[[Note Title|your input]]`, so your original text is preserved even if the note is renamed.
 - **Localized UI**: Interface available in English and Russian. Language follows your Obsidian settings.
 
@@ -16,8 +19,10 @@ An Obsidian plugin that lets you create links to notes using natural word forms.
 
 1. Open the command palette (Cmd/Ctrl+P) and run **Insert natural link**, or use your assigned hotkey.
 2. Start typing the word or phrase you want to link.
-3. Select a matching note from the suggestions.
+3. Select a matching note from the suggestions and press **Enter**.
 4. The plugin inserts a wikilink: `[[Matched Note|your typed text]]`.
+
+**Tip**: Press **Shift+Enter** at any time to insert a link using your exact input as-is, bypassing search results. The result is `[[your typed text|your typed text]]`.
 
 ### Recommended hotkey
 

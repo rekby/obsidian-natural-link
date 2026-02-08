@@ -19,10 +19,16 @@ export class NaturalLinkModal extends SuggestModal<SearchResult> {
 		this.lastQuery = "";
 		this.setPlaceholder(t("modal.placeholder"));
 		this.setInstructions([
-			{ command: "↑↓", purpose: "navigate" },
-			{ command: "↵", purpose: "insert link" },
-			{ command: "esc", purpose: "dismiss" },
+			{ command: "↑↓", purpose: t("modal.instruction.navigate") },
+			{ command: "↵", purpose: t("modal.instruction.insert-link") },
+			{ command: "shift ↵", purpose: t("modal.instruction.insert-as-typed") },
+			{ command: "esc", purpose: t("modal.instruction.dismiss") },
 		]);
+
+		this.scope.register(["Shift"], "Enter", (evt: KeyboardEvent) => {
+			this.insertRawLink();
+			return false;
+		});
 	}
 
 	getSuggestions(query: string): SearchResult[] {
@@ -35,6 +41,12 @@ export class NaturalLinkModal extends SuggestModal<SearchResult> {
 
 	renderSuggestion(result: SearchResult, el: HTMLElement): void {
 		el.createEl("div", { text: result.note.title, cls: "suggestion-title" });
+		if (result.matchedAlias) {
+			el.createEl("div", {
+				text: result.matchedAlias,
+				cls: "suggestion-note natural-link-matched-alias",
+			});
+		}
 		if (result.note.path !== `${result.note.title}.md`) {
 			el.createEl("small", { text: result.note.path, cls: "suggestion-path" });
 		}
@@ -49,6 +61,20 @@ export class NaturalLinkModal extends SuggestModal<SearchResult> {
 		const link = `[[${noteTitle}|${displayText}]]`;
 
 		this.editor.replaceSelection(link);
+	}
+
+	/**
+	 * Insert a link using the raw user input as both target and display text.
+	 * Bypasses search results — the link points to whatever the user typed.
+	 */
+	private insertRawLink(): void {
+		const rawInput = this.lastQuery.trim();
+		if (rawInput.length === 0) {
+			return;
+		}
+		const link = `[[${rawInput}|${rawInput}]]`;
+		this.editor.replaceSelection(link);
+		this.close();
 	}
 
 	onNoSuggestion(): void {

@@ -24,4 +24,6 @@ export interface NoteInfo {
  */
 export interface SearchResult {
 	note: NoteInfo;
+	/** The alias that matched the query, if the best match was on an alias (not the title). */
+	matchedAlias?: string;
 }

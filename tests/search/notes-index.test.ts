@@ -58,6 +58,7 @@ describe("NotesIndex", () => {
 			const results = index.search("альтернативное название");
 			expect(results.length).toBe(1);
 			expect(results[0]!.note.title).toBe("Main title");
+			expect(results[0]!.matchedAlias).toBe("Альтернативное название");
 		});
 
 		it("finds note by alias with different word form", () => {
@@ -67,6 +68,17 @@ describe("NotesIndex", () => {
 			);
 			const results = index.search("деревянную коробку");
 			expect(results.length).toBe(1);
+			expect(results[0]!.matchedAlias).toBe("Деревянная коробка");
+		});
+
+		it("does not set matchedAlias when matched by title", () => {
+			const index = new NotesIndex(
+				[makeNote("Деревянная коробка", ["Alias"])],
+				stemmer,
+			);
+			const results = index.search("деревянную коробку");
+			expect(results.length).toBe(1);
+			expect(results[0]!.matchedAlias).toBeUndefined();
 		});
 	});
 

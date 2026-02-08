@@ -32,35 +32,37 @@ export class NotesIndex {
 		// Stem the full (non-last) query tokens
 		const fullQueryStems = fullTokens.map((t) => new Set(this.stemmer.stem(t)));
 
-		const scored: Array<{ note: NoteInfo; score: number }> = [];
+		const scored: Array<{ note: NoteInfo; score: number; matchedAlias?: string }> = [];
 
 		for (const note of this.notes) {
-			const bestScore = this.scoreNote(note, fullQueryStems, lastToken);
-			if (bestScore > 0) {
-				scored.push({ note, score: bestScore });
+			const { score, matchedAlias } = this.scoreNote(note, fullQueryStems, lastToken);
+			if (score > 0) {
+				scored.push({ note, score, matchedAlias });
 			}
 		}
 
 		scored.sort((a, b) => b.score - a.score);
-		return scored.map((s) => ({ note: s.note }));
+		return scored.map((s) => ({ note: s.note, matchedAlias: s.matchedAlias }));
 	}
 
 	/**
 	 * Compute match score for a note against the query.
-	 * Returns the best score across title and all aliases.
-	 * Returns 0 if no match.
+	 * Returns the best score across title and all aliases,
+	 * along with the alias that matched (if any).
+	 * Returns score 0 if no match.
 	 */
 	private scoreNote(
 		note: NoteInfo,
 		fullQueryStems: Set<string>[],
 		lastToken: string,
-	): number {
+	): { score: number; matchedAlias?: string } {
 		const sources = [
 			{ text: note.title, isTitle: true },
 			...note.aliases.map((a) => ({ text: a, isTitle: false })),
 		];
 
 		let bestScore = 0;
+		let bestAlias: string | undefined;
 		for (const source of sources) {
 			const score = this.scoreSource(
 				source.text,
@@ -70,9 +72,10 @@ export class NotesIndex {
 			);
 			if (score > bestScore) {
 				bestScore = score;
+				bestAlias = source.isTitle ? undefined : source.text;
 			}
 		}
-		return bestScore;
+		return { score: bestScore, matchedAlias: bestAlias };
 	}
 
 	/**

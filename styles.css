@@ -1,8 +1,8 @@
 /*
+ * Natural Link plugin styles
+ */
 
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
-
-If your plugin does not need CSS, delete this file.
-
-*/
+.natural-link-matched-alias {
+	font-size: var(--font-smallest);
+	color: var(--text-muted);
+}

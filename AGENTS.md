@@ -50,7 +50,7 @@ tests/
 - **Stemmer interface** (`types.ts`): `stem(word: string): string[]`. Implementations wrap the `snowball-stemmers` library. `MultiStemmer` composes multiple language stemmers and deduplicates results.
 - **NotesIndex** (`search/notes-index.ts`): Built from `NoteInfo[]` + `Stemmer`. Provides `search(query): SearchResult[]`. Handles tokenization, stemming, prefix matching for incomplete last word, and ranking internally. Built once per modal open.
 - **i18n** (`i18n/`): Simple key-value translations. `en.ts` is the base language (all keys required). Other locales use `Partial<typeof en>` for compile-time key validation. Locale detected via `moment.locale()`.
-- **NaturalLinkModal** (`ui/natural-link-modal.ts`): Obsidian `SuggestModal`. Gets `NotesIndex` in constructor. Inserts `[[NoteTitle|userInput]]` on selection.
+- **NaturalLinkModal** (`ui/natural-link-modal.ts`): Obsidian `SuggestModal`. Gets `NotesIndex` in constructor. Inserts `[[NoteTitle|userInput]]` on selection. Supports Shift+Enter to insert `[[rawInput|rawInput]]` bypassing search results.
 
 ### Search algorithm
 
@@ -66,7 +66,8 @@ tests/
 2. Builds `NotesIndex(notes, multiStemmer)`
 3. Opens `NaturalLinkModal` with the index
 4. On each keystroke: `index.search(query)` returns ranked results
-5. On selection: inserts `[[NoteTitle|userInput]]` via editor
+5. On selection (Enter): inserts `[[NoteTitle|userInput]]` via editor
+6. On Shift+Enter: inserts `[[rawInput|rawInput]]` (link as typed, bypasses search results)
 
 ## Environment & tooling
 
@@ -122,9 +123,9 @@ npm run lint         # ESLint
 
 ## Documentation maintenance
 
-- **Keep `README.md` and `AGENTS.md` up to date**: when adding, changing, or removing features, update both files to reflect the current state.
+- **Keep `README.md`, `README.ru.md`, and `AGENTS.md` up to date**: when adding, changing, or removing features, update all three files to reflect the current state.
 - **Readability first**: these files should be well-structured and easy to read. When updating, don't just append new information — restructure sections as needed to maintain logical flow and avoid duplication. Remove outdated content.
-- `README.md` is for the end user: features, usage, examples, installation. Keep it concise and practical.
+- `README.md` is for the end user (English). `README.ru.md` is the Russian translation — keep it in sync with `README.md`.
 - `AGENTS.md` is for the AI agent: file structure, modules, algorithms, conventions, limitations. Keep it precise and navigable.
 
 ## Future extensions (designed for but not yet implemented)
