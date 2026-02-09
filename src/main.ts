@@ -2,6 +2,7 @@ import { Editor, EditorPosition, MarkdownView, Plugin, TAbstractFile } from "obs
 import { DEFAULT_SETTINGS, NaturalLinkSettings, NaturalLinkSettingTab } from "./settings";
 import { NaturalLinkModal } from "./ui/natural-link-modal";
 import { NotesIndex } from "./search/notes-index";
+import { RecentNotes, MAX_BOOST_COUNT } from "./search/recent-notes";
 import { MultiStemmer } from "./stemming/multi-stemmer";
 import { RussianStemmer } from "./stemming/russian-stemmer";
 import { EnglishStemmer } from "./stemming/english-stemmer";
@@ -42,6 +43,7 @@ interface EditorSuggestManager {
 
 export default class NaturalLinkPlugin extends Plugin {
 	settings: NaturalLinkSettings;
+	recentNotes: RecentNotes;
 
 	async onload() {
 		await this.loadSettings();
@@ -201,7 +203,12 @@ export default class NaturalLinkPlugin extends Plugin {
 				matches: null,
 			}));
 
-		return [...mdItems, ...nonMdItems];
+		const combined = [...mdItems, ...nonMdItems];
+		return this.recentNotes.boostRecent(
+			combined,
+			(item) => this.suggestItemTitle(item),
+			MAX_BOOST_COUNT,
+		);
 	}
 
 	/**
@@ -218,13 +225,13 @@ export default class NaturalLinkPlugin extends Plugin {
 
 		const query = (ctx.query || "").trim();
 
-		// Determine note title from the native item
+		// Determine note title from the native item.
+		// For markdown files, use basename (without .md) — Obsidian resolves them by name.
+		// For non-markdown files, use the full filename with extension — otherwise the link breaks.
 		let title: string;
-		const basename = item.file
-			? (item.file as TAbstractFile & { basename?: string }).basename
-			: undefined;
-		if (basename) {
-			title = basename;
+		const fileTyped = item.file as TAbstractFile & { basename?: string; name?: string; extension?: string } | null | undefined;
+		if (fileTyped?.basename) {
+			title = fileTyped.extension === "md" ? fileTyped.basename : (fileTyped.name ?? fileTyped.basename);
 		} else if (item.linktext) {
 			title = item.linktext;
 		} else {
@@ -236,6 +243,7 @@ export default class NaturalLinkPlugin extends Plugin {
 			link = `[[${query}|${query}]]`;
 		} else {
 			link = `[[${title}|${query}]]`;
+			this.recordNoteSelection(title);
 		}
 
 		const editor = ctx.editor;
@@ -261,6 +269,19 @@ export default class NaturalLinkPlugin extends Plugin {
 		suggest.close();
 	}
 
+	/**
+	 * Extract the title key from a NativeSuggestItem — matching the logic used
+	 * when recording a selection in insertPipedLink.
+	 * Markdown files: basename (without .md). Non-markdown: full filename with extension.
+	 */
+	private suggestItemTitle(item: NativeSuggestItem): string {
+		const f = item.file as TAbstractFile & { basename?: string; name?: string; extension?: string } | null | undefined;
+		if (f?.basename) {
+			return f.extension === "md" ? f.basename : (f.name ?? f.basename);
+		}
+		return item.linktext || item.path;
+	}
+
 	private openNaturalLinkModal(editor: Editor): void {
 		const notes = this.collectNotes();
 		if (this.settings.searchNonExistingNotes) {
@@ -272,7 +293,13 @@ export default class NaturalLinkPlugin extends Plugin {
 			new EnglishStemmer(),
 		]);
 		const index = new NotesIndex(notes, stemmer);
-		new NaturalLinkModal(this.app, editor, index).open();
+		new NaturalLinkModal(
+			this.app,
+			editor,
+			index,
+			this.recentNotes,
+			(title) => this.recordNoteSelection(title),
+		).open();
 	}
 
 	/**
@@ -332,14 +359,26 @@ export default class NaturalLinkPlugin extends Plugin {
 	}
 
 	async loadSettings() {
-		this.settings = Object.assign(
-			{},
-			DEFAULT_SETTINGS,
-			(await this.loadData()) as Partial<NaturalLinkSettings>,
-		);
+		const data = (await this.loadData()) as Partial<NaturalLinkSettings> | null;
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, data);
+
+		const recentRaw = this.app.loadLocalStorage("natural-link-recentNotes") as string | null;
+		const recentData = recentRaw
+			? (JSON.parse(recentRaw) as Record<string, number>)
+			: undefined;
+		this.recentNotes = new RecentNotes(recentData);
 	}
 
 	async saveSettings() {
-		await this.saveData(this.settings);
+		await this.saveData({ ...this.settings });
+	}
+
+	saveRecentNotes() {
+		this.app.saveLocalStorage("natural-link-recentNotes", JSON.stringify(this.recentNotes.toJSON()));
+	}
+
+	private recordNoteSelection(title: string): void {
+		this.recentNotes.record(title);
+		this.saveRecentNotes();
 	}
 }
