@@ -53,6 +53,8 @@ export default class NaturalLinkPlugin extends Plugin {
 	private pendingSpecialCharTitle: string | null = null;
 	/** Editor reference saved alongside pendingSpecialCharQuery. */
 	private pendingSpecialCharEditor: Editor | null = null;
+	/** Editor reference set after | is pressed — signals display-text editing mode. */
+	private pendingPipeEditor: Editor | null = null;
 
 	async onload() {
 		await this.loadSettings();
@@ -105,6 +107,21 @@ export default class NaturalLinkPlugin extends Plugin {
 			const origSelectSuggestion =
 				nativeSuggest.selectSuggestion.bind(nativeSuggest);
 
+			// Wrap onTrigger to suppress the suggest entirely in display-text mode (after |).
+			// onTrigger returning null tells Obsidian "don't open the suggest".
+			const suggestAny = nativeSuggest as NativeSuggest & { onTrigger?: (...args: unknown[]) => unknown };
+			const origOnTrigger = suggestAny.onTrigger
+				? suggestAny.onTrigger.bind(nativeSuggest)
+				: null;
+			if (origOnTrigger) {
+				suggestAny.onTrigger = (...args: unknown[]): unknown => {
+					if (this.settings.inlineLinkSuggest && this.pendingPipeEditor) {
+						return null;
+					}
+					return origOnTrigger(...args);
+				};
+			}
+
 			// Wrap getSuggestions: when enabled and query is non-empty,
 			// return morphological search results in native item format.
 			// After #/^ special-char handling, pass through to native for heading/block
@@ -119,6 +136,17 @@ export default class NaturalLinkPlugin extends Plugin {
 				if (query.trim().length === 0) {
 					this.clearPendingSpecialChar();
 					return origGetSuggestions(context);
+				}
+
+				// If query contains |, user is editing display text after pipe.
+				// Return empty array to completely suppress the suggest popup.
+				if (query.includes('|')) {
+					return [];
+				}
+
+				// Clear pipe mode if getSuggestions is called without |
+				if (this.pendingPipeEditor) {
+					this.pendingPipeEditor = null;
 				}
 
 				// Handle heading (#) or block (^) reference in the query.
@@ -201,15 +229,40 @@ export default class NaturalLinkPlugin extends Plugin {
 			};
 
 			// Intercept | key in the native suggest to handle display-text mode.
+			// Also handles Enter in display-text mode (after |) to move cursor past ]].
 			// (# and ^ are handled in selectSuggestion / getSuggestions instead,
 			// because the native suggest processes them via its own key handler first.)
 			const keyHandler = (evt: KeyboardEvent): void => {
 				if (!this.settings.inlineLinkSuggest) return;
+
+				// Handle Enter in display-text mode (after |):
+				// move cursor past ]] and close the suggest.
+				// This runs even if the suggest is closed (context is null).
+				if (evt.key === 'Enter' && !evt.shiftKey && this.pendingPipeEditor) {
+					const editor = this.pendingPipeEditor;
+					const cursor = editor.getCursor();
+					const line = editor.getLine(cursor.line);
+					const closeBracketIdx = line.indexOf(']]', cursor.ch);
+					if (closeBracketIdx >= 0) {
+						evt.preventDefault();
+						evt.stopPropagation();
+						editor.setCursor({ line: cursor.line, ch: closeBracketIdx + 2 });
+						this.pendingPipeEditor = null;
+						if (nativeSuggest.context) {
+							nativeSuggest.close();
+						}
+						return;
+					}
+					// ]] not found — clear stale state
+					this.pendingPipeEditor = null;
+				}
+
 				if (!nativeSuggest.context) return;
 
 				// Clean up pending state on Escape
 				if (evt.key === 'Escape') {
 					this.clearPendingSpecialChar();
+					this.pendingPipeEditor = null;
 					return;
 				}
 
@@ -238,8 +291,12 @@ export default class NaturalLinkPlugin extends Plugin {
 			this.register(() => {
 				nativeSuggest.getSuggestions = origGetSuggestions;
 				nativeSuggest.selectSuggestion = origSelectSuggestion;
+				if (origOnTrigger) {
+					suggestAny.onTrigger = origOnTrigger;
+				}
 				document.removeEventListener('keydown', keyHandler, true);
 				this.clearPendingSpecialChar();
+				this.pendingPipeEditor = null;
 			});
 		} catch {
 			// Internal API may have changed — silently ignore
@@ -547,6 +604,7 @@ export default class NaturalLinkPlugin extends Plugin {
 		editor.setCursor({ line: from.line, ch: from.ch + link.length - 2 });
 
 		suggest.close();
+		this.pendingPipeEditor = editor;
 		this.recordNoteSelection(title);
 	}
 
