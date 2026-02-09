@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-natural-link",
-	"version": "0.0.0",
+	"version": "0.0.3",
 	"description": "Obsidian plugin: create links to notes using natural word forms",
 	"main": "main.js",
 	"type": "module",
