@@ -6,7 +6,7 @@ An Obsidian plugin that lets you create links to notes using natural word forms.
 
 ![Search example: typing "runnin" finds the note "Run is good"](Screenshot.png)
 
-*Experimental feature: replaces the standard inline link suggestions with the plugin's morphological search:*
+*Experimental feature: replaces the standard inline link suggestions with the plugin's morphological search (can be enabled in the plugin settings):*
 ![Inline suggest: morphological search replaces the native autocomplete](Screenshot-inline.png)
 
 ## Features
