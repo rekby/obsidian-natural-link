@@ -54,7 +54,7 @@ tests/
 - **RecentNotes** (`search/recent-notes.ts`): Tracks recently selected notes by title and timestamp. `boostRecent()` prepends the most recent selections to the top of search results. Stored in device-local `localStorage` via `app.loadLocalStorage` / `app.saveLocalStorage` (not synced). Prunes to `MAX_RECENT_COUNT` (1000) entries.
 - **i18n** (`i18n/`): Simple key-value translations. `en.ts` is the base language (all keys required). Other locales use `Partial<typeof en>` for compile-time key validation. Locale detected via `moment.locale()`.
 - **NaturalLinkModal** (`ui/natural-link-modal.ts`): Obsidian `SuggestModal`. Gets `NotesIndex` in constructor. Inserts `[[NoteTitle|userInput]]` on selection. Supports Shift+Enter to insert `[[rawInput|rawInput]]` bypassing search results.
-- **Inline `[[` suggest** (in `main.ts`): Wraps the native file suggest's `getSuggestions` and `selectSuggestion` via Obsidian's internal `editorSuggest.suggests[0]` API. When `inlineLinkSuggest` is enabled, `getSuggestions` returns morphological search results mapped to native item format; `selectSuggestion` inserts piped wikilinks `[[Title|query]]`. The native suggest handles all UI, triggering, and keyboard navigation. Originals are restored on plugin unload.
+- **Inline `[[` suggest** (in `main.ts`): Wraps the native file suggest's `getSuggestions` and `selectSuggestion` via Obsidian's internal `editorSuggest.suggests[0]` API. When `inlineLinkSuggest` is enabled, `getSuggestions` returns morphological search results mapped to native item format; `selectSuggestion` inserts piped wikilinks `[[Title|query]]`. Also intercepts `#`, `^`, and `|` keystrokes via a capture-phase `keydown` handler on `document` to support heading/block references and display-text editing (see "Special character handling" below). The native suggest handles all UI, triggering, and keyboard navigation. Originals and the keydown handler are restored/removed on plugin unload.
 
 ### Search algorithm
 
@@ -96,7 +96,31 @@ Settings are stored in `data.json` (synced via Obsidian Sync). Device-local stat
 3. The native suggest renders the items using its standard UI.
 4. On selection (Enter): the wrapped `selectSuggestion` inserts `[[NoteTitle|query]]` (piped format).
 5. On Shift+Enter: inserts `[[query|query]]`.
-6. On plugin unload or setting disabled: original methods are restored.
+6. On plugin unload or setting disabled: original methods are restored, keydown handler is removed.
+
+#### Special character handling in inline suggest (`#`, `^`, `|`)
+
+**`#` or `^` (heading / block reference):**
+
+Detected in two places (covers both native behaviors):
+
+1. **Via `selectSuggestion`**: The native suggest intercepts `#`/`^` keystrokes via its own key handler (on `window`, before our plugin) and calls `selectSuggestion` to accept the current file and switch to heading/block mode. Our wrapped `selectSuggestion` detects `evt.key === '#'`/`'^'`, saves the original query in `pendingSpecialCharQuery`, the resolved title in `pendingSpecialCharTitle`, and the editor in `pendingSpecialCharEditor`, then calls `origSelectSuggestion` to let native handle the mode transition.
+
+2. **Via `getSuggestions`** (fallback): If `#`/`^` is typed directly into the query text, the wrapped `getSuggestions` detects it via `findSpecialCharIndex`. On first detection, resolves the pre-`#`/`^` query part via morphological search (`buildNativeSuggestItems`), saves the same pending state. Then substitutes the morphological query with the resolved note title in the context and passes to `origGetSuggestions` — the native suggest shows heading/block completions for the correct note.
+
+3. **Heading/block selection**: When the user selects a heading/block (Enter), `selectSuggestion` fires with `pendingSpecialCharQuery` set → `handlePostSpecialCharSelect` calls native `origSelectSuggestion` (inserts `[[NoteTitle#heading]]`), then appends `|savedQuery` before `]]` → final result: `[[NoteTitle#heading|query]]`. If the link already contains `|`, the saved query is not appended.
+
+**`|` (display text mode):**
+
+Intercepted via a capture-phase `keydown` listener on `document` (only active when `inlineLinkSuggest` is enabled, the suggest is open, and the query does not already contain `#`, `^`, or `|`).
+
+1. The selected (or first) suggest item determines the note title.
+2. Inserts `[[NoteTitle|query]]` with cursor placed right before `]]`.
+3. The suggest is closed. The user can continue typing display text freely.
+
+**State cleanup:** `clearPendingSpecialChar()` clears `pendingSpecialCharQuery`, `pendingSpecialCharTitle`, and `pendingSpecialCharEditor`. Called on Escape, on empty query, when the query no longer contains `#`/`^`, when `selectSuggestion` fires for the heading/block selection, or on plugin unload.
+
+**Selected item access** (for `|`): `getSelectedSuggestItem` reads the internal `suggest.suggestions.selectedItem` index and `suggest.suggestions.values` array (internal API). Falls back to `lastSuggestItems[0]` (cached from the last `buildNativeSuggestItems` call).
 
 ## Environment & tooling
 
