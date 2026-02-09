@@ -98,17 +98,30 @@ describe("RecentNotes", () => {
 		});
 
 		it("boosts at most MAX_BOOST_COUNT items", () => {
-			const recent = new RecentNotes({
-				A: 4000,
-				B: 3000,
-				C: 2000,
-				D: 1000,
-			});
-			const results = ["A", "B", "C", "D", "E"];
+			// Create MAX_BOOST_COUNT + 1 recent entries
+			const data: Record<string, number> = {};
+			for (let i = 0; i <= MAX_BOOST_COUNT; i++) {
+				data[String.fromCharCode(65 + i)] =
+					(MAX_BOOST_COUNT + 1 - i) * 1000;
+			}
+			const recent = new RecentNotes(data);
+
+			// Results include all recent items + one non-recent
+			const results: string[] = [];
+			for (let i = 0; i <= MAX_BOOST_COUNT + 1; i++) {
+				results.push(String.fromCharCode(65 + i));
+			}
 			const boosted = recent.boostRecent(results, (x) => x);
 
-			// Only top 3 (A, B, C) should be boosted; D stays in original position
-			expect(boosted).toEqual(["A", "B", "C", "D", "E"]);
+			// Only top MAX_BOOST_COUNT should be boosted; the rest stay in original order
+			for (let i = 0; i < MAX_BOOST_COUNT; i++) {
+				expect(boosted[i]).toBe(String.fromCharCode(65 + i));
+			}
+			// The (MAX_BOOST_COUNT+1)-th recent item is not boosted
+			expect(boosted[MAX_BOOST_COUNT]).toBe(
+				String.fromCharCode(65 + MAX_BOOST_COUNT),
+			);
+			expect(boosted).toHaveLength(results.length);
 		});
 
 		it("preserves original order for non-boosted items", () => {
@@ -190,19 +203,32 @@ describe("RecentNotes", () => {
 		});
 
 		it("items beyond boost count stay in their original position", () => {
-			const recent = new RecentNotes({
-				A: 5000,
-				B: 4000,
-				C: 3000,
-				D: 2000,
-				E: 1000,
-			});
-			const results = ["E", "D", "C", "B", "A"];
+			// Create MAX_BOOST_COUNT + 2 recent entries
+			const itemCount = MAX_BOOST_COUNT + 2;
+			const data: Record<string, number> = {};
+			for (let i = 0; i < itemCount; i++) {
+				data[String.fromCharCode(65 + i)] = (itemCount - i) * 1000;
+			}
+			const recent = new RecentNotes(data);
+
+			// Results in reverse alphabetical order
+			const results: string[] = [];
+			for (let i = itemCount - 1; i >= 0; i--) {
+				results.push(String.fromCharCode(65 + i));
+			}
 			const boosted = recent.boostRecent(results, (x) => x);
 
-			// Top 3 by recency: A(5000), B(4000), C(3000) → boosted
-			// D and E stay in their original relative order
-			expect(boosted).toEqual(["A", "B", "C", "E", "D"]);
+			// Top MAX_BOOST_COUNT by recency → boosted to front
+			for (let i = 0; i < MAX_BOOST_COUNT; i++) {
+				expect(boosted[i]).toBe(String.fromCharCode(65 + i));
+			}
+			// Remaining items stay in their original relative order (reversed)
+			const rest = boosted.slice(MAX_BOOST_COUNT);
+			for (let i = 1; i < rest.length; i++) {
+				expect(rest[i]!.charCodeAt(0)).toBeLessThan(
+					rest[i - 1]!.charCodeAt(0),
+				);
+			}
 		});
 	});
 

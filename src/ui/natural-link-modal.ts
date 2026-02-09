@@ -1,6 +1,6 @@
 import { App, Editor, SuggestModal } from "obsidian";
 import { NotesIndex } from "../search/notes-index";
-import { RecentNotes } from "../search/recent-notes";
+import { RecentNotes, MAX_BOOST_COUNT } from "../search/recent-notes";
 import { SearchResult } from "../types";
 import { t } from "../i18n";
 
@@ -48,7 +48,7 @@ export class NaturalLinkModal extends SuggestModal<SearchResult> {
 			return [];
 		}
 		const results = this.index.search(query);
-		return this.recentNotes.boostRecent(results, (r) => r.note.title);
+		return this.recentNotes.boostRecent(results, (r) => r.note.title, MAX_BOOST_COUNT);
 	}
 
 	renderSuggestion(result: SearchResult, el: HTMLElement): void {

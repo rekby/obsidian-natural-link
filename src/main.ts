@@ -2,7 +2,7 @@ import { Editor, EditorPosition, MarkdownView, Plugin, TAbstractFile } from "obs
 import { DEFAULT_SETTINGS, NaturalLinkSettings, NaturalLinkSettingTab } from "./settings";
 import { NaturalLinkModal } from "./ui/natural-link-modal";
 import { NotesIndex } from "./search/notes-index";
-import { RecentNotes } from "./search/recent-notes";
+import { RecentNotes, MAX_BOOST_COUNT } from "./search/recent-notes";
 import { MultiStemmer } from "./stemming/multi-stemmer";
 import { RussianStemmer } from "./stemming/russian-stemmer";
 import { EnglishStemmer } from "./stemming/english-stemmer";
@@ -207,6 +207,7 @@ export default class NaturalLinkPlugin extends Plugin {
 		return this.recentNotes.boostRecent(
 			combined,
 			(item) => this.suggestItemTitle(item),
+			MAX_BOOST_COUNT,
 		);
 	}
 
@@ -361,8 +362,10 @@ export default class NaturalLinkPlugin extends Plugin {
 		const data = (await this.loadData()) as Partial<NaturalLinkSettings> | null;
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, data);
 
-		const recentRaw = this.app.loadLocalStorage("natural-link-recentNotes");
-		const recentData = recentRaw ? JSON.parse(recentRaw) : undefined;
+		const recentRaw = this.app.loadLocalStorage("natural-link-recentNotes") as string | null;
+		const recentData = recentRaw
+			? (JSON.parse(recentRaw) as Record<string, number>)
+			: undefined;
 		this.recentNotes = new RecentNotes(recentData);
 	}
 
