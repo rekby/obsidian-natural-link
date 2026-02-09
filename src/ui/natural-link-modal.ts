@@ -1,5 +1,6 @@
 import { App, Editor, SuggestModal } from "obsidian";
 import { NotesIndex } from "../search/notes-index";
+import { RecentNotes } from "../search/recent-notes";
 import { SearchResult } from "../types";
 import { t } from "../i18n";
 
@@ -10,12 +11,22 @@ import { t } from "../i18n";
 export class NaturalLinkModal extends SuggestModal<SearchResult> {
 	private readonly index: NotesIndex;
 	private readonly editor: Editor;
+	private readonly recentNotes: RecentNotes;
+	private readonly onNoteSelected: (title: string) => void;
 	private lastQuery: string;
 
-	constructor(app: App, editor: Editor, index: NotesIndex) {
+	constructor(
+		app: App,
+		editor: Editor,
+		index: NotesIndex,
+		recentNotes: RecentNotes,
+		onNoteSelected: (title: string) => void,
+	) {
 		super(app);
 		this.index = index;
 		this.editor = editor;
+		this.recentNotes = recentNotes;
+		this.onNoteSelected = onNoteSelected;
 		this.lastQuery = "";
 		this.setPlaceholder(t("modal.placeholder"));
 		this.setInstructions([
@@ -36,7 +47,8 @@ export class NaturalLinkModal extends SuggestModal<SearchResult> {
 		if (query.trim().length === 0) {
 			return [];
 		}
-		return this.index.search(query);
+		const results = this.index.search(query);
+		return this.recentNotes.boostRecent(results, (r) => r.note.title);
 	}
 
 	renderSuggestion(result: SearchResult, el: HTMLElement): void {
@@ -66,6 +78,7 @@ export class NaturalLinkModal extends SuggestModal<SearchResult> {
 		const link = `[[${noteTitle}|${displayText}]]`;
 
 		this.editor.replaceSelection(link);
+		this.onNoteSelected(noteTitle);
 	}
 
 	/**

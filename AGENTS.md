@@ -25,6 +25,7 @@ src/
   search/
     tokenizer.ts               # Text tokenization (split into words, lowercase)
     notes-index.ts             # NotesIndex: built from NoteInfo[] + Stemmer, search(query)
+    recent-notes.ts            # RecentNotes: tracks recently selected notes, boosts them in results
   i18n/
     index.ts                   # t(key) translation function, locale detection, EN fallback
     en.ts                      # English translations (base/fallback language)
@@ -41,6 +42,7 @@ tests/
   search/
     tokenizer.test.ts
     notes-index.test.ts
+    recent-notes.test.ts
   i18n/
     i18n.test.ts
 ```
@@ -49,6 +51,7 @@ tests/
 
 - **Stemmer interface** (`types.ts`): `stem(word: string): string[]`. Implementations wrap the `snowball-stemmers` library. `RussianStemmer` normalizes `ё` → `е` before stemming (Snowball doesn't recognize `ё`). `MultiStemmer` composes multiple language stemmers and deduplicates results.
 - **NotesIndex** (`search/notes-index.ts`): Built from `NoteInfo[]` + `Stemmer`. Provides `search(query): SearchResult[]`. Handles tokenization, stemming, prefix matching for incomplete last word, and ranking internally. Built once per modal open.
+- **RecentNotes** (`search/recent-notes.ts`): Tracks recently selected notes by title and timestamp. `boostRecent()` prepends the most recent selections to the top of search results. Stored in device-local `localStorage` via `app.loadLocalStorage` / `app.saveLocalStorage` (not synced). Prunes to `MAX_RECENT_COUNT` (1000) entries.
 - **i18n** (`i18n/`): Simple key-value translations. `en.ts` is the base language (all keys required). Other locales use `Partial<typeof en>` for compile-time key validation. Locale detected via `moment.locale()`.
 - **NaturalLinkModal** (`ui/natural-link-modal.ts`): Obsidian `SuggestModal`. Gets `NotesIndex` in constructor. Inserts `[[NoteTitle|userInput]]` on selection. Supports Shift+Enter to insert `[[rawInput|rawInput]]` bypassing search results.
 - **Inline `[[` suggest** (in `main.ts`): Wraps the native file suggest's `getSuggestions` and `selectSuggestion` via Obsidian's internal `editorSuggest.suggests[0]` API. When `inlineLinkSuggest` is enabled, `getSuggestions` returns morphological search results mapped to native item format; `selectSuggestion` inserts piped wikilinks `[[Title|query]]`. The native suggest handles all UI, triggering, and keyboard navigation. Originals are restored on plugin unload.
@@ -61,11 +64,17 @@ tests/
 4. Partial matches allowed (not all query words need to match), ranked lower
 5. Ranking: query match ratio (0.5) + source specificity (0.4) + title bonus (0.1)
 
-### Settings
+### Settings and storage
 
+Settings are stored in `data.json` (synced via Obsidian Sync). Device-local state is stored in `localStorage` (not synced).
+
+**`data.json`** (synced):
 - **`version`** (`number`): Schema version for future migrations. Current: `1`.
 - **`searchNonExistingNotes`** (`boolean`, default `true`): When enabled, search results include notes referenced by `[[links]]` that don't exist yet as files. Uses `metadataCache.unresolvedLinks` to collect unresolved link targets, deduplicates against existing notes.
 - **`inlineLinkSuggest`** (`boolean`, default `false`): When enabled, wraps the native `[[` link suggest to replace its search results with the plugin's morphological search. The native suggest UI is preserved; only `getSuggestions` and `selectSuggestion` are patched. Uses internal API (`app.workspace.editorSuggest.suggests[0]`).
+
+**`localStorage`** (device-local, not synced):
+- **`recentNotes`** (`Record<string, number>`): Map of note title → timestamp. Tracks recently selected notes to boost them in search results. Managed by `RecentNotes` class. Stored via `app.loadLocalStorage("natural-link-recentNotes")` / `app.saveLocalStorage("natural-link-recentNotes", ...)` (official Obsidian API since v1.8.7).
 
 ### Data flow
 
