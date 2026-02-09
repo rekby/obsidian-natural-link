@@ -1,13 +1,44 @@
-import { Editor, MarkdownView, Plugin } from "obsidian";
+import { Editor, EditorPosition, MarkdownView, Plugin, TAbstractFile } from "obsidian";
 import { DEFAULT_SETTINGS, NaturalLinkSettings, NaturalLinkSettingTab } from "./settings";
 import { NaturalLinkModal } from "./ui/natural-link-modal";
-import { NaturalLinkSuggest } from "./ui/natural-link-suggest";
 import { NotesIndex } from "./search/notes-index";
 import { MultiStemmer } from "./stemming/multi-stemmer";
 import { RussianStemmer } from "./stemming/russian-stemmer";
 import { EnglishStemmer } from "./stemming/english-stemmer";
-import { NoteInfo } from "./types";
+import { NoteInfo, SearchResult } from "./types";
 import { t } from "./i18n";
+
+/**
+ * Internal Obsidian types for the native [[ file suggest.
+ * Not part of the public API — used by community plugins via editorSuggest.suggests.
+ */
+interface NativeSuggestContext {
+	editor: Editor;
+	start: EditorPosition;
+	end: EditorPosition;
+	query: string;
+}
+
+interface NativeSuggestItem {
+	type: string;
+	file?: TAbstractFile | null;
+	path: string;
+	alias?: string;
+	linktext?: string;
+	score: number;
+	matches: null;
+}
+
+interface NativeSuggest {
+	getSuggestions: (context: NativeSuggestContext) => NativeSuggestItem[] | Promise<NativeSuggestItem[]>;
+	selectSuggestion: (item: NativeSuggestItem, evt: MouseEvent | KeyboardEvent) => void;
+	context: NativeSuggestContext | null;
+	close: () => void;
+}
+
+interface EditorSuggestManager {
+	suggests: NativeSuggest[];
+}
 
 export default class NaturalLinkPlugin extends Plugin {
 	settings: NaturalLinkSettings;
@@ -25,61 +56,209 @@ export default class NaturalLinkPlugin extends Plugin {
 
 		this.addSettingTab(new NaturalLinkSettingTab(this.app, this));
 
-		// Register inline [[ suggest (it checks the setting internally in onTrigger)
-		const suggest = new NaturalLinkSuggest(this);
-		this.registerEditorSuggest(suggest);
-
-		// Once layout is ready, patch the native file suggest so ours can take over [[.
-		// The native suggest is in the internal editorSuggest.suggests array.
-		// This is not part of the public API but is widely used by community plugins.
+		// Patch the native [[ suggest once layout is ready.
+		// Wraps getSuggestions and selectSuggestion on the built-in file suggest
+		// to use our morphological search when the setting is enabled.
+		// Uses internal API (editorSuggest.suggests) — widely used by community plugins.
 		this.app.workspace.onLayoutReady(() => {
-			this.patchNativeFileSuggest(suggest);
+			this.patchNativeSuggest();
 		});
 	}
 
 	/**
-	 * Patch the native [[ file suggest so that it yields to our suggest
-	 * when inlineLinkSuggest setting is enabled. Restores on plugin unload.
+	 * Wrap the native [[ file suggest's getSuggestions and selectSuggestion
+	 * to inject morphological search results when inlineLinkSuggest is enabled.
+	 * The native suggest handles all UI, triggering, and keyboard navigation.
+	 * Originals are restored on plugin unload.
 	 */
-	private patchNativeFileSuggest(ownSuggest: NaturalLinkSuggest): void {
+	private patchNativeSuggest(): void {
 		try {
-			const manager = (this.app.workspace as unknown as {
-				editorSuggest?: { suggests?: unknown[] };
-			}).editorSuggest;
+			const manager = (
+				this.app.workspace as unknown as { editorSuggest?: EditorSuggestManager }
+			).editorSuggest;
 			if (!manager?.suggests?.length) return;
 
-			// Move our suggest to the front of the array for priority
-			const suggests = manager.suggests;
-			const idx = suggests.indexOf(ownSuggest);
-			if (idx > 0) {
-				suggests.splice(idx, 1);
-				suggests.unshift(ownSuggest);
+			const nativeSuggest = manager.suggests[0];
+			if (
+				!nativeSuggest ||
+				typeof nativeSuggest.getSuggestions !== "function" ||
+				typeof nativeSuggest.selectSuggestion !== "function"
+			) {
+				return;
 			}
 
-			// Patch native file suggest (first non-ours suggest in the array).
-			// When our inlineLinkSuggest setting is enabled, its onTrigger returns null
-			// so it won't compete with ours for the [[ trigger.
-			const nativeSuggest = suggests.find((s) => s !== ownSuggest) as
-				| { onTrigger: (...args: unknown[]) => unknown }
-				| undefined;
-			if (!nativeSuggest || typeof nativeSuggest.onTrigger !== "function") return;
+			const origGetSuggestions =
+				nativeSuggest.getSuggestions.bind(nativeSuggest);
+			const origSelectSuggestion =
+				nativeSuggest.selectSuggestion.bind(nativeSuggest);
 
-			const originalOnTrigger = nativeSuggest.onTrigger.bind(nativeSuggest);
-
-			nativeSuggest.onTrigger = (...args: unknown[]) => {
-				if (this.settings.inlineLinkSuggest) {
-					return null;
+			// Wrap getSuggestions: when enabled and query is non-empty,
+			// return morphological search results in native item format.
+			nativeSuggest.getSuggestions = (
+				context: NativeSuggestContext,
+			): NativeSuggestItem[] | Promise<NativeSuggestItem[]> => {
+				if (!this.settings.inlineLinkSuggest) {
+					return origGetSuggestions(context);
 				}
-				return originalOnTrigger(...args);
+				const query = context.query || "";
+				if (query.trim().length === 0) {
+					// Empty query — show the native file list as usual
+					return origGetSuggestions(context);
+				}
+				return this.buildNativeSuggestItems(query);
 			};
 
-			// Restore original onTrigger when plugin is unloaded
+			// Wrap selectSuggestion: when enabled, insert piped wikilink
+			// [[Title|userInput]] instead of the native [[Title]] format.
+			nativeSuggest.selectSuggestion = (
+				item: NativeSuggestItem,
+				evt: MouseEvent | KeyboardEvent,
+			): void => {
+				if (!this.settings.inlineLinkSuggest) {
+					origSelectSuggestion(item, evt);
+					return;
+				}
+				this.insertPipedLink(nativeSuggest, item, evt);
+			};
+
+			// Restore originals on plugin unload
 			this.register(() => {
-				nativeSuggest.onTrigger = originalOnTrigger;
+				nativeSuggest.getSuggestions = origGetSuggestions;
+				nativeSuggest.selectSuggestion = origSelectSuggestion;
 			});
 		} catch {
 			// Internal API may have changed — silently ignore
 		}
+	}
+
+	/**
+	 * Run morphological search and map results to the native suggest item format
+	 * so renderSuggestion and the rest of the native UI work unchanged.
+	 * Markdown notes are found via morphological search (displayed without .md).
+	 * Non-markdown files are matched by substring (displayed with their extension).
+	 */
+	private buildNativeSuggestItems(query: string): NativeSuggestItem[] {
+		// 1. Morphological search for markdown notes
+		const notes = this.collectNotes();
+		if (this.settings.searchNonExistingNotes) {
+			notes.push(...this.collectUnresolvedNotes(notes));
+		}
+		const stemmer = new MultiStemmer([
+			new RussianStemmer(),
+			new EnglishStemmer(),
+		]);
+		const index = new NotesIndex(notes, stemmer);
+		const results = index.search(query);
+
+		const mdItems = results.map((result: SearchResult): NativeSuggestItem => {
+			// Strip .md extension — native suggest shows markdown notes without it
+			const displayPath = result.note.path.replace(/\.md$/, "");
+
+			if (result.note.exists === false) {
+				return {
+					type: "linktext",
+					linktext: result.note.title,
+					path: result.note.title,
+					score: 0,
+					matches: null,
+				};
+			}
+			const file = this.app.vault.getAbstractFileByPath(result.note.path);
+			if (result.matchedAlias) {
+				return {
+					type: "alias",
+					file,
+					path: displayPath,
+					alias: result.matchedAlias,
+					score: 0,
+					matches: null,
+				};
+			}
+			return {
+				type: "file",
+				file,
+				path: displayPath,
+				score: 0,
+				matches: null,
+			};
+		});
+
+		// 2. Simple substring match for non-markdown files (images, PDFs, etc.)
+		const lowerQuery = query.toLowerCase();
+		const nonMdItems: NativeSuggestItem[] = this.app.vault
+			.getFiles()
+			.filter((f) => f.extension !== "md")
+			.filter(
+				(f) =>
+					f.basename.toLowerCase().includes(lowerQuery) ||
+					f.path.toLowerCase().includes(lowerQuery),
+			)
+			.map((f): NativeSuggestItem => ({
+				type: "file",
+				file: f,
+				path: f.path, // keep extension for non-markdown files
+				score: 0,
+				matches: null,
+			}));
+
+		return [...mdItems, ...nonMdItems];
+	}
+
+	/**
+	 * Insert a piped wikilink [[Title|query]] at the suggest trigger location.
+	 * Handles Shift+Enter for raw link insertion and auto-inserted ]].
+	 */
+	private insertPipedLink(
+		suggest: NativeSuggest,
+		item: NativeSuggestItem,
+		evt: MouseEvent | KeyboardEvent,
+	): void {
+		const ctx = suggest.context;
+		if (!ctx) return;
+
+		const query = (ctx.query || "").trim();
+
+		// Determine note title from the native item
+		let title: string;
+		const basename = item.file
+			? (item.file as TAbstractFile & { basename?: string }).basename
+			: undefined;
+		if (basename) {
+			title = basename;
+		} else if (item.linktext) {
+			title = item.linktext;
+		} else {
+			title = (item.path || query).replace(/\.md$/, "");
+		}
+
+		let link: string;
+		if (evt instanceof KeyboardEvent && evt.shiftKey) {
+			link = `[[${query}|${query}]]`;
+		} else {
+			link = `[[${title}|${query}]]`;
+		}
+
+		const editor = ctx.editor;
+		const startLine = editor.getLine(ctx.start.line);
+
+		// Find where [[ begins (start may be at [[ or right after it)
+		let fromCh = ctx.start.ch;
+		if (fromCh >= 2 && startLine.substring(fromCh - 2, fromCh) === "[[") {
+			fromCh -= 2;
+		}
+		const from: EditorPosition = { line: ctx.start.line, ch: fromCh };
+
+		// Handle auto-inserted ]] after cursor
+		const endLine = editor.getLine(ctx.end.line);
+		let toCh = ctx.end.ch;
+		if (endLine.substring(toCh, toCh + 2) === "]]") {
+			toCh += 2;
+		}
+		const to: EditorPosition = { line: ctx.end.line, ch: toCh };
+
+		editor.replaceRange(link, from, to);
+		editor.setCursor({ line: from.line, ch: from.ch + link.length });
+		suggest.close();
 	}
 
 	private openNaturalLinkModal(editor: Editor): void {

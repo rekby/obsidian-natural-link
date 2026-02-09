@@ -16,7 +16,7 @@ export const ru: Partial<typeof en> = {
 	"settings.search-non-existing-notes-description":
 		"Включить в результаты поиска заметки, на которые есть ссылки, но которые ещё не созданы",
 	"settings.inline-link-suggest":
-		"Заменить стандартные подсказки [[",
+		"Заменить стандартные подсказки [[ (экспериментально)",
 	"settings.inline-link-suggest-description":
 		"Использовать морфологический поиск плагина вместо стандартного автодополнения при вводе [[",
 };
