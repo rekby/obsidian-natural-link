@@ -73,7 +73,7 @@ export class NaturalLinkSettingTab extends PluginSettingTab {
 				setTimeout(() => {
 					const searchComponent = app.setting?.activeTab?.searchComponent;
 					if (searchComponent) {
-						searchComponent.setValue("Natural Link");
+						searchComponent.setValue("Natural link");
 						// Dispatch input event to trigger the actual filtering
 						searchComponent.inputEl?.dispatchEvent(
 							new Event("input", { bubbles: true }),

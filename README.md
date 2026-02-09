@@ -1,6 +1,6 @@
 *Читайте на [русском](README.ru.md).*
 
-# Natural Link
+# Natural link
 
 An Obsidian plugin that lets you create links to notes using natural word forms. Type a word in any grammatical form and the plugin will find matching notes regardless of declension, conjugation, or word order.
 
@@ -19,7 +19,7 @@ An Obsidian plugin that lets you create links to notes using natural word forms.
 
 ## Usage
 
-1. Open the command palette (Cmd/Ctrl+P) and run **Insert natural link**, or use your assigned hotkey.
+1. Open the command palette (Cmd/Ctrl+P) and run **Insert Natural link**, or use your assigned hotkey.
 2. Start typing the word or phrase you want to link.
 3. Select a matching note from the suggestions and press **Enter**.
 4. The plugin inserts a wikilink: `[[Matched Note|your typed text]]`.
@@ -31,7 +31,7 @@ An Obsidian plugin that lets you create links to notes using natural word forms.
 The plugin does not assign a hotkey by default. We recommend **Cmd/Ctrl+Shift+K** (next to Cmd+K which is "Insert link" in Obsidian). To set it up:
 
 1. Go to **Settings → Hotkeys**
-2. Search for "Natural Link"
+2. Search for "Natural link"
 3. Assign your preferred shortcut
 
 You can also open the hotkey settings directly from the plugin's settings tab.
@@ -50,7 +50,7 @@ You can also open the hotkey settings directly from the plugin's settings tab.
 > **Status**: The plugin has been submitted to the official community plugin list and is awaiting review. Once approved, it will be available directly from Obsidian.
 
 1. Open **Settings → Community plugins → Browse**.
-2. Search for **Natural Link**.
+2. Search for **Natural link**.
 3. Click **Install**, then **Enable**.
 
 ### Via BRAT (recommended while awaiting official listing)
@@ -61,7 +61,7 @@ You can also open the hotkey settings directly from the plugin's settings tab.
 2. Open **Settings → BRAT → Add Beta plugin**.
 3. Enter the repository URL: `https://github.com/rekby/obsidian-natural-link`
 4. Click **Add Plugin**.
-5. Enable **Natural Link** in **Settings → Community plugins**.
+5. Enable **Natural link** in **Settings → Community plugins**.
 
 BRAT will automatically check for updates and keep the plugin current.
 
@@ -70,7 +70,7 @@ BRAT will automatically check for updates and keep the plugin current.
 1. Download `main.js`, `manifest.json`, and `styles.css` from the [latest release](https://github.com/rekby/obsidian-natural-link/releases/latest).
 2. Create a folder `<Vault>/.obsidian/plugins/obsidian-natural-link/`.
 3. Copy the downloaded files into that folder.
-4. Reload Obsidian and enable **Natural Link** in **Settings → Community plugins**.
+4. Reload Obsidian and enable **Natural link** in **Settings → Community plugins**.
 
 ## Development
 
