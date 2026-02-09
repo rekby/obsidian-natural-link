@@ -14,8 +14,8 @@
 
 ```
 src/
-  main.ts                      # Plugin entry point, lifecycle, command registration
-  settings.ts                  # Settings tab (version, searchNonExistingNotes toggle, hotkey button)
+  main.ts                      # Plugin entry point, lifecycle, command registration, native suggest patching
+  settings.ts                  # Settings tab (version, searchNonExistingNotes, inlineLinkSuggest toggles, hotkey button)
   types.ts                     # Core interfaces: Stemmer, NoteInfo, SearchResult
   snowball-stemmers.d.ts       # Type declarations for snowball-stemmers library
   stemming/
@@ -51,6 +51,7 @@ tests/
 - **NotesIndex** (`search/notes-index.ts`): Built from `NoteInfo[]` + `Stemmer`. Provides `search(query): SearchResult[]`. Handles tokenization, stemming, prefix matching for incomplete last word, and ranking internally. Built once per modal open.
 - **i18n** (`i18n/`): Simple key-value translations. `en.ts` is the base language (all keys required). Other locales use `Partial<typeof en>` for compile-time key validation. Locale detected via `moment.locale()`.
 - **NaturalLinkModal** (`ui/natural-link-modal.ts`): Obsidian `SuggestModal`. Gets `NotesIndex` in constructor. Inserts `[[NoteTitle|userInput]]` on selection. Supports Shift+Enter to insert `[[rawInput|rawInput]]` bypassing search results.
+- **Inline `[[` suggest** (in `main.ts`): Wraps the native file suggest's `getSuggestions` and `selectSuggestion` via Obsidian's internal `editorSuggest.suggests[0]` API. When `inlineLinkSuggest` is enabled, `getSuggestions` returns morphological search results mapped to native item format; `selectSuggestion` inserts piped wikilinks `[[Title|query]]`. The native suggest handles all UI, triggering, and keyboard navigation. Originals are restored on plugin unload.
 
 ### Search algorithm
 
@@ -64,8 +65,11 @@ tests/
 
 - **`version`** (`number`): Schema version for future migrations. Current: `1`.
 - **`searchNonExistingNotes`** (`boolean`, default `true`): When enabled, search results include notes referenced by `[[links]]` that don't exist yet as files. Uses `metadataCache.unresolvedLinks` to collect unresolved link targets, deduplicates against existing notes.
+- **`inlineLinkSuggest`** (`boolean`, default `false`): When enabled, wraps the native `[[` link suggest to replace its search results with the plugin's morphological search. The native suggest UI is preserved; only `getSuggestions` and `selectSuggestion` are patched. Uses internal API (`app.workspace.editorSuggest.suggests[0]`).
 
 ### Data flow
+
+#### Modal (command/hotkey)
 
 1. User invokes command → `main.ts` collects `NoteInfo[]` from Obsidian API (`vault.getMarkdownFiles()` + `metadataCache`). If `searchNonExistingNotes` is enabled, also collects unresolved link targets via `metadataCache.unresolvedLinks`.
 2. Builds `NotesIndex(notes, multiStemmer)`
@@ -73,6 +77,17 @@ tests/
 4. On each keystroke: `index.search(query)` returns ranked results
 5. On selection (Enter): inserts `[[NoteTitle|userInput]]` via editor
 6. On Shift+Enter: inserts `[[rawInput|rawInput]]` (link as typed, bypasses search results)
+
+#### Inline suggest (`[[` trigger)
+
+1. User types `[[` in the editor → native file suggest triggers as usual.
+2. If `inlineLinkSuggest` is enabled, the wrapped `getSuggestions` intercepts the query:
+   - Empty query: passes through to native (shows standard file list).
+   - Non-empty query: collects `NoteInfo[]`, builds `NotesIndex`, runs morphological search, maps results to native item format (`type: "file"` / `"alias"` / `"linktext"`).
+3. The native suggest renders the items using its standard UI.
+4. On selection (Enter): the wrapped `selectSuggestion` inserts `[[NoteTitle|query]]` (piped format).
+5. On Shift+Enter: inserts `[[query|query]]`.
+6. On plugin unload or setting disabled: original methods are restored.
 
 ## Environment & tooling
 
@@ -138,4 +153,3 @@ npm run lint         # ESLint
 - Lemmatization: add `lemmatize?(word: string): string` to `Stemmer` interface for creating notes in base form
 - Fuzzy matching on stems for typo tolerance
 - Semantic/vector search (can replace search logic inside `NotesIndex` without changing its API)
-- Inline `[[` integration via `EditorSuggest`

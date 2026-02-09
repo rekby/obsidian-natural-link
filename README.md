@@ -6,6 +6,9 @@ An Obsidian plugin that lets you create links to notes using natural word forms.
 
 ![Search example: typing "runnin" finds the note "Run is good"](Screenshot.png)
 
+*Experimental feature: replaces the standard inline link suggestions with the plugin's morphological search:*
+![Inline suggest: morphological search replaces the native autocomplete](Screenshot-inline.png)
+
 ## Features
 
 - **Morphological search**: Find notes by any word form. Searching for "деревянную коробку" will match a note titled "Деревянная коробка".
@@ -15,6 +18,7 @@ An Obsidian plugin that lets you create links to notes using natural word forms.
 - **Multi-language**: Russian and English stemming work simultaneously. The plugin determines word stems algorithmically, no dictionaries required.
 - **Insert link as typed**: Press **Shift+Enter** to insert a link with your exact input as both target and display text, bypassing search results.
 - **Preserved display text**: Links are always created as `[[Note Title|your input]]`, so your original text is preserved even if the note is renamed.
+- **Inline `[[` suggest** (opt-in): Replace Obsidian's native link autocomplete with the plugin's morphological search. Suggestions appear inline as you type `[[`, without opening a separate modal. Enable in Settings → Natural link → "Replace native [[ link suggest".
 - **Localized UI**: Interface available in English and Russian. Language follows your Obsidian settings.
 
 ## Usage

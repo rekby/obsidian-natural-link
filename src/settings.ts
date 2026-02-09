@@ -7,11 +7,14 @@ export interface NaturalLinkSettings {
 	version: number;
 	/** Whether to include unresolved links (non-existing notes) in search results */
 	searchNonExistingNotes: boolean;
+	/** Whether to replace native [[ link suggest with the plugin's morphological search */
+	inlineLinkSuggest: boolean;
 }
 
 export const DEFAULT_SETTINGS: NaturalLinkSettings = {
 	version: 1,
 	searchNonExistingNotes: true,
+	inlineLinkSuggest: false,
 };
 
 export class NaturalLinkSettingTab extends PluginSettingTab {
@@ -34,6 +37,18 @@ export class NaturalLinkSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.searchNonExistingNotes)
 					.onChange(async (value) => {
 						this.plugin.settings.searchNonExistingNotes = value;
+						await this.plugin.saveSettings();
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName(t("settings.inline-link-suggest"))
+			.setDesc(t("settings.inline-link-suggest-description"))
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.inlineLinkSuggest)
+					.onChange(async (value) => {
+						this.plugin.settings.inlineLinkSuggest = value;
 						await this.plugin.saveSettings();
 					}),
 			);
