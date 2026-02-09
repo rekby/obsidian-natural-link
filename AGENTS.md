@@ -1,8 +1,8 @@
-# Natural Link — Obsidian plugin
+# Natural link — Obsidian plugin
 
 ## Project overview
 
-- **Name**: Natural Link (`obsidian-natural-link`)
+- **Name**: Natural link (`obsidian-natural-link`)
 - **Purpose**: Create links to notes using natural word forms. Finds matching notes regardless of word declension, order, or incomplete input.
 - Target: Obsidian Community Plugin (TypeScript → bundled JavaScript).
 - Entry point: `src/main.ts` compiled to `main.js` and loaded by Obsidian.

@@ -1,6 +1,6 @@
 {
 	"id": "natural-link",
-	"name": "Natural Link",
+	"name": "Natural link",
 	"version": "0.0.0",
 	"minAppVersion": "0.15.0",
 	"description": "Create links to notes using natural word forms. Finds matching notes regardless of word declension or order.",
