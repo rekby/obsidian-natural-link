@@ -163,7 +163,9 @@ export default class NaturalLinkPlugin extends Plugin {
 				// Detect native suggest transitioning to heading/block mode via # or ^.
 				// The native suggest calls selectSuggestion when # or ^ is typed,
 				// accepting the current file and switching to heading/block completion.
-				// We save the original query for use as display text later.
+				// We save the original query for use as display text, let native handle
+				// the transition, then insert |query before ]] so the user can see the
+				// display text while browsing headings/blocks.
 				if (evt instanceof KeyboardEvent && (evt.key === '#' || evt.key === '^')) {
 					const ctx = nativeSuggest.context;
 					const query = (ctx?.query || "").trim();
@@ -174,6 +176,24 @@ export default class NaturalLinkPlugin extends Plugin {
 						this.recordNoteSelection(this.pendingSpecialCharTitle);
 					}
 					origSelectSuggestion(item, evt);
+
+					// Insert |query before ]] so the display text is visible
+					// while the user browses headings/blocks.
+					if (query.length > 0 && this.pendingSpecialCharEditor) {
+						const editor = this.pendingSpecialCharEditor;
+						const savedCursor = editor.getCursor();
+						const line = editor.getLine(savedCursor.line);
+						const closeBracketIdx = line.indexOf(']]', savedCursor.ch);
+						if (closeBracketIdx >= 0) {
+							const pipeText = `|${query}`;
+							const insertPos: EditorPosition = {
+								line: savedCursor.line, ch: closeBracketIdx,
+							};
+							editor.replaceRange(pipeText, insertPos, insertPos);
+							// Keep cursor in the heading/block part, not in display text
+							editor.setCursor(savedCursor);
+						}
+					}
 					return;
 				}
 
