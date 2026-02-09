@@ -4,7 +4,7 @@ import { getTranslation } from "../../src/i18n/index";
 describe("i18n", () => {
 	it("returns English translation for 'en' locale", () => {
 		expect(getTranslation("en", "command.natural-link")).toBe(
-			"Insert Natural link",
+			"Insert natural link",
 		);
 	});
 
@@ -16,7 +16,7 @@ describe("i18n", () => {
 
 	it("falls back to English for unknown locale", () => {
 		expect(getTranslation("zh", "command.natural-link")).toBe(
-			"Insert Natural link",
+			"Insert natural link",
 		);
 	});
 
