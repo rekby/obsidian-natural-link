@@ -118,6 +118,8 @@ Intercepted via a capture-phase `keydown` listener on `document` (only active wh
 2. Inserts `[[NoteTitle|query]]` with cursor placed right before `]]`.
 3. The suggest is closed. The user can continue typing display text freely.
 
+**Display-text suppression:** While the cursor is inside the display-text portion of a wikilink (`[[Title|displayText▌]]`), the suggest popup is suppressed. This is detected dynamically via `isCursorInLinkDisplayText(editor)` — which inspects the current line to check if the cursor is between `|` and `]]` inside a `[[...|...]]` link. No persistent flag is used; the check runs on every `onTrigger` call, so the suggest works normally as soon as the cursor moves outside the display text (e.g. via arrow keys or clicking elsewhere). The same detection is used for Enter handling: pressing Enter while in display text moves the cursor past `]]`.
+
 **State cleanup:** `clearPendingSpecialChar()` clears `pendingSpecialCharQuery`, `pendingSpecialCharTitle`, and `pendingSpecialCharEditor`. Called on Escape, on empty query, when the query no longer contains `#`/`^`, when `selectSuggestion` fires for the heading/block selection, or on plugin unload.
 
 **Selected item access** (for `|`): `getSelectedSuggestItem` reads the internal `suggest.suggestions.selectedItem` index and `suggest.suggestions.values` array (internal API). Falls back to `lastSuggestItems[0]` (cached from the last `buildNativeSuggestItems` call).

@@ -53,8 +53,6 @@ export default class NaturalLinkPlugin extends Plugin {
 	private pendingSpecialCharTitle: string | null = null;
 	/** Editor reference saved alongside pendingSpecialCharQuery. */
 	private pendingSpecialCharEditor: Editor | null = null;
-	/** Editor reference set after | is pressed — signals display-text editing mode. */
-	private pendingPipeEditor: Editor | null = null;
 
 	async onload() {
 		await this.loadSettings();
@@ -115,8 +113,13 @@ export default class NaturalLinkPlugin extends Plugin {
 				: null;
 			if (origOnTrigger) {
 				suggestAny.onTrigger = (...args: unknown[]): unknown => {
-					if (this.settings.inlineLinkSuggest && this.pendingPipeEditor) {
-						return null;
+					// Suppress suggest when cursor is inside display-text portion of a wikilink.
+					// args[1] is the editor (Obsidian's onTrigger(cursor, editor, file) signature).
+					if (this.settings.inlineLinkSuggest) {
+						const editor = args[1] as Editor | undefined;
+						if (editor && this.isCursorInLinkDisplayText(editor)) {
+							return null;
+						}
 					}
 					return origOnTrigger(...args);
 				};
@@ -142,11 +145,6 @@ export default class NaturalLinkPlugin extends Plugin {
 				// Return empty array to completely suppress the suggest popup.
 				if (query.includes('|')) {
 					return [];
-				}
-
-				// Clear pipe mode if getSuggestions is called without |
-				if (this.pendingPipeEditor) {
-					this.pendingPipeEditor = null;
 				}
 
 				// Handle heading (#) or block (^) reference in the query.
@@ -237,24 +235,24 @@ export default class NaturalLinkPlugin extends Plugin {
 
 				// Handle Enter in display-text mode (after |):
 				// move cursor past ]] and close the suggest.
-				// This runs even if the suggest is closed (context is null).
-				if (evt.key === 'Enter' && !evt.shiftKey && this.pendingPipeEditor) {
-					const editor = this.pendingPipeEditor;
-					const cursor = editor.getCursor();
-					const line = editor.getLine(cursor.line);
-					const closeBracketIdx = line.indexOf(']]', cursor.ch);
-					if (closeBracketIdx >= 0) {
-						evt.preventDefault();
-						evt.stopPropagation();
-						editor.setCursor({ line: cursor.line, ch: closeBracketIdx + 2 });
-						this.pendingPipeEditor = null;
-						if (nativeSuggest.context) {
-							nativeSuggest.close();
+				// Detects display-text dynamically via cursor position.
+				if (evt.key === 'Enter' && !evt.shiftKey) {
+					const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+					const editor = view?.editor;
+					if (editor && this.isCursorInLinkDisplayText(editor)) {
+						const cursor = editor.getCursor();
+						const line = editor.getLine(cursor.line);
+						const closeBracketIdx = line.indexOf(']]', cursor.ch);
+						if (closeBracketIdx >= 0) {
+							evt.preventDefault();
+							evt.stopPropagation();
+							editor.setCursor({ line: cursor.line, ch: closeBracketIdx + 2 });
+							if (nativeSuggest.context) {
+								nativeSuggest.close();
+							}
+							return;
 						}
-						return;
 					}
-					// ]] not found — clear stale state
-					this.pendingPipeEditor = null;
 				}
 
 				if (!nativeSuggest.context) return;
@@ -262,7 +260,6 @@ export default class NaturalLinkPlugin extends Plugin {
 				// Clean up pending state on Escape
 				if (evt.key === 'Escape') {
 					this.clearPendingSpecialChar();
-					this.pendingPipeEditor = null;
 					return;
 				}
 
@@ -296,7 +293,6 @@ export default class NaturalLinkPlugin extends Plugin {
 				}
 				document.removeEventListener('keydown', keyHandler, true);
 				this.clearPendingSpecialChar();
-				this.pendingPipeEditor = null;
 			});
 		} catch {
 			// Internal API may have changed — silently ignore
@@ -476,6 +472,36 @@ export default class NaturalLinkPlugin extends Plugin {
 		return null;
 	}
 
+	/**
+	 * Check whether the editor cursor is currently inside the display-text
+	 * portion of a wikilink, i.e. after `|` in `[[NoteTitle|displayText]]`.
+	 * Used to suppress the suggest popup while the user edits display text,
+	 * without needing a persistent flag.
+	 */
+	private isCursorInLinkDisplayText(editor: Editor): boolean {
+		const cursor = editor.getCursor();
+		const line = editor.getLine(cursor.line);
+		const ch = cursor.ch;
+
+		// Text from line start up to cursor
+		const textBefore = line.substring(0, ch);
+
+		// Find the last [[ before cursor — this is the innermost link opening
+		const lastOpenIdx = textBefore.lastIndexOf('[[');
+		if (lastOpenIdx < 0) return false;
+
+		// If there is a ]] between [[ and cursor, we are outside that link
+		const betweenOpenAndCursor = textBefore.substring(lastOpenIdx + 2);
+		if (betweenOpenAndCursor.includes(']]')) return false;
+
+		// There must be a ]] after cursor to form a complete link
+		const textAfter = line.substring(ch);
+		if (!textAfter.includes(']]')) return false;
+
+		// If there is a | between [[ and cursor, cursor is in display text
+		return betweenOpenAndCursor.includes('|');
+	}
+
 	/** Clear all pending special-char state. */
 	private clearPendingSpecialChar(): void {
 		this.pendingSpecialCharQuery = null;
@@ -604,7 +630,6 @@ export default class NaturalLinkPlugin extends Plugin {
 		editor.setCursor({ line: from.line, ch: from.ch + link.length - 2 });
 
 		suggest.close();
-		this.pendingPipeEditor = editor;
 		this.recordNoteSelection(title);
 	}
 
