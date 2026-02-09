@@ -11,5 +11,6 @@ export class Plugin {}
 export class PluginSettingTab {}
 export class Modal {}
 export class SuggestModal {}
+export class EditorSuggest {}
 export class Setting {}
 export class Notice {}

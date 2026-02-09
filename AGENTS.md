@@ -15,7 +15,7 @@
 ```
 src/
   main.ts                      # Plugin entry point, lifecycle, command registration
-  settings.ts                  # Settings tab (version, searchNonExistingNotes toggle, hotkey button)
+  settings.ts                  # Settings tab (version, searchNonExistingNotes, inlineLinkSuggest toggles, hotkey button)
   types.ts                     # Core interfaces: Stemmer, NoteInfo, SearchResult
   snowball-stemmers.d.ts       # Type declarations for snowball-stemmers library
   stemming/
@@ -31,6 +31,7 @@ src/
     ru.ts                      # Russian translations
   ui/
     natural-link-modal.ts      # SuggestModal for searching and inserting links
+    natural-link-suggest.ts    # EditorSuggest: inline [[ autocomplete replacement
 tests/
   __mocks__/
     obsidian.ts                # Minimal Obsidian API mock for testing
@@ -51,6 +52,7 @@ tests/
 - **NotesIndex** (`search/notes-index.ts`): Built from `NoteInfo[]` + `Stemmer`. Provides `search(query): SearchResult[]`. Handles tokenization, stemming, prefix matching for incomplete last word, and ranking internally. Built once per modal open.
 - **i18n** (`i18n/`): Simple key-value translations. `en.ts` is the base language (all keys required). Other locales use `Partial<typeof en>` for compile-time key validation. Locale detected via `moment.locale()`.
 - **NaturalLinkModal** (`ui/natural-link-modal.ts`): Obsidian `SuggestModal`. Gets `NotesIndex` in constructor. Inserts `[[NoteTitle|userInput]]` on selection. Supports Shift+Enter to insert `[[rawInput|rawInput]]` bypassing search results.
+- **NaturalLinkSuggest** (`ui/natural-link-suggest.ts`): Obsidian `EditorSuggest`. Inline autocomplete that replaces the native `[[` link suggest when enabled via settings. Triggers on `[[`, builds and caches `NotesIndex` per trigger session. Same rendering and link format as the modal. Supports Shift+Enter for raw link insertion.
 
 ### Search algorithm
 
@@ -64,8 +66,11 @@ tests/
 
 - **`version`** (`number`): Schema version for future migrations. Current: `1`.
 - **`searchNonExistingNotes`** (`boolean`, default `true`): When enabled, search results include notes referenced by `[[links]]` that don't exist yet as files. Uses `metadataCache.unresolvedLinks` to collect unresolved link targets, deduplicates against existing notes.
+- **`inlineLinkSuggest`** (`boolean`, default `false`): When enabled, replaces Obsidian's native `[[` link autocomplete with the plugin's morphological search displayed as an inline suggestion popup (via `EditorSuggest`).
 
 ### Data flow
+
+#### Modal (command/hotkey)
 
 1. User invokes command → `main.ts` collects `NoteInfo[]` from Obsidian API (`vault.getMarkdownFiles()` + `metadataCache`). If `searchNonExistingNotes` is enabled, also collects unresolved link targets via `metadataCache.unresolvedLinks`.
 2. Builds `NotesIndex(notes, multiStemmer)`
@@ -73,6 +78,15 @@ tests/
 4. On each keystroke: `index.search(query)` returns ranked results
 5. On selection (Enter): inserts `[[NoteTitle|userInput]]` via editor
 6. On Shift+Enter: inserts `[[rawInput|rawInput]]` (link as typed, bypasses search results)
+
+#### Inline suggest (`[[` trigger)
+
+1. User types `[[` in the editor → `NaturalLinkSuggest.onTrigger()` detects the trigger (if `inlineLinkSuggest` setting is enabled).
+2. On first trigger: collects `NoteInfo[]` and builds `NotesIndex` (cached until trigger context is lost).
+3. On each keystroke after `[[`: `getSuggestions()` calls `index.search(query)` with the text after `[[`.
+4. Inline popup shows ranked results (same rendering as the modal).
+5. On selection (Enter): replaces `[[query` with `[[NoteTitle|query]]`.
+6. On Shift+Enter: replaces `[[query` with `[[query|query]]`.
 
 ## Environment & tooling
 
@@ -138,4 +152,3 @@ npm run lint         # ESLint
 - Lemmatization: add `lemmatize?(word: string): string` to `Stemmer` interface for creating notes in base form
 - Fuzzy matching on stems for typo tolerance
 - Semantic/vector search (can replace search logic inside `NotesIndex` without changing its API)
-- Inline `[[` integration via `EditorSuggest`
