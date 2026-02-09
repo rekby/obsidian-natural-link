@@ -11,10 +11,10 @@ An Obsidian plugin that lets you create links to notes using natural word forms.
 
 ## Features
 
-- **Morphological search**: Find notes by any word form. Searching for "деревянную коробку" will match a note titled "Деревянная коробка".
-- **Prefix matching**: Results update as you type. Even incomplete words match — typing "кор" will find "Коробка".
+- **Morphological search**: Find notes by any word form. Searching for "wooden boxes" will match a note titled "Wooden box".
+- **Prefix matching**: Results update as you type. Even incomplete words match — typing "wood" will find "Wooden box".
 - **Alias support**: Searches across note titles and frontmatter aliases.
-- **Word order independence**: "коробку деревянную" finds "Деревянная коробка".
+- **Word order independence**: "box wooden" finds "Wooden box".
 - **Multi-language**: Russian and English stemming work simultaneously. The plugin determines word stems algorithmically, no dictionaries required.
 - **Insert link as typed**: Press **Shift+Enter** to insert a link with your exact input as both target and display text, bypassing search results.
 - **Preserved display text**: Links are always created as `[[Note Title|your input]]`, so your original text is preserved even if the note is renamed.
@@ -44,8 +44,9 @@ You can also open the hotkey settings directly from the plugin's settings tab.
 
 | You type | Note found | Link created |
 |----------|-----------|--------------|
-| running shoes | Running shoes | `[[Running shoes\|running shoes]]` |
-| run shoe | Running shoes | `[[Running shoes\|run shoe]]` |
+| wooden boxes | Wooden box | `[[Wooden box\|wooden boxes]]` |
+| box wooden | Wooden box | `[[Wooden box\|box wooden]]` |
+| wood | Wooden box | `[[Wooden box\|wood]]` |
 
 ## Installation
 
@@ -89,7 +90,7 @@ npm run lint         # Lint
 
 ## Known limitations
 
-- **Consonant alternations**: Snowball stemming is algorithmic and does not handle root consonant changes (e.g. "бег" and "бежать" have different stems). Full lemmatization support is planned for a future release.
+- **Irregular word forms**: Snowball stemming is algorithmic and cannot connect words with irregular roots (e.g. "mouse" and "mice" produce different stems). Full lemmatization support is planned for a future release.
 - **No typo tolerance**: Currently matches are exact on stems. Fuzzy matching is planned.
 
 ## License
