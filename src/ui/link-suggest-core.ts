@@ -53,7 +53,7 @@ export class LinkSuggestCore {
 
 	// ----- Suggestions -----
 
-	async getSuggestions(query: string): Promise<LinkSuggestion[]> {
+	async getSuggestions(query: string, selectedNote?: NoteInfo): Promise<LinkSuggestion[]> {
 		if (query.trim().length === 0) {
 			return this.getRecentSuggestions();
 		}
@@ -62,7 +62,7 @@ export class LinkSuggestCore {
 
 		const hasSubLink = parsed.headingPart !== undefined || parsed.blockPart !== undefined;
 		if (hasSubLink) {
-			return this.getSubLinkSuggestions(parsed);
+			return this.getSubLinkSuggestions(parsed, selectedNote);
 		}
 
 		return this.getNoteSuggestions(parsed.notePart);
@@ -199,14 +199,16 @@ export class LinkSuggestCore {
 	 * When the query contains # or ^, resolve the best matching note first,
 	 * then return its headings or blocks filtered by the sub-link prefix.
 	 */
-	private async getSubLinkSuggestions(parsed: ParsedQuery): Promise<LinkSuggestion[]> {
+	private async getSubLinkSuggestions(parsed: ParsedQuery, selectedNote?: NoteInfo): Promise<LinkSuggestion[]> {
 		const noteResults = parsed.notePart.trim().length > 0
 			? this.getNoteSuggestions(parsed.notePart)
 			: this.getRecentSuggestions();
 
-		if (noteResults.length === 0) return [];
+		// Use the explicitly selected note if provided (from the UI's
+		// highlighted item); otherwise fall back to the best search result.
+		const bestNote = selectedNote ?? noteResults[0]?.note;
+		if (!bestNote) return [];
 
-		const bestNote = noteResults[0]!.note;
 		const file = this.app.vault.getAbstractFileByPath(bestNote.path);
 		if (!file || !(file instanceof TFile)) return noteResults;
 
@@ -454,10 +456,8 @@ export class LinkSuggestCore {
 		if (parsed.displayPart !== undefined && parsed.displayPart.trim().length > 0) {
 			return parsed.displayPart.trim();
 		}
-		const notePart = parsed.notePart.trim();
-		if (notePart.length > 0) {
-			return notePart;
-		}
-		return rawQuery.trim();
+		// Display = the note part the user typed (before any #, ^, |).
+		// When empty (e.g. bare "#heading" or "^"), no display text is shown.
+		return parsed.notePart.trim();
 	}
 }

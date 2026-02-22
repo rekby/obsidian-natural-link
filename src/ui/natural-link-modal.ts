@@ -1,6 +1,7 @@
 import { App, Editor, SuggestModal } from "obsidian";
-import { LinkSuggestion } from "../types";
+import { LinkSuggestion, NoteInfo } from "../types";
 import { LinkSuggestCore } from "./link-suggest-core";
+import { parseQuery } from "./query-parser";
 import { t } from "../i18n";
 
 /**
@@ -13,6 +14,11 @@ export class NaturalLinkModal extends SuggestModal<LinkSuggestion> {
 	private readonly editor: Editor;
 	private readonly onNoteSelected: (title: string) => void;
 	private lastQuery = "";
+
+	/** Last note-level suggestions returned (before any #/^ sub-link). */
+	private lastNoteSuggestions: LinkSuggestion[] = [];
+	/** Note resolved from the user's highlighted selection, persisted while in sub-link mode. */
+	private resolvedNote: NoteInfo | null = null;
 
 	constructor(
 		app: App,
@@ -35,7 +41,25 @@ export class NaturalLinkModal extends SuggestModal<LinkSuggestion> {
 
 	async getSuggestions(query: string): Promise<LinkSuggestion[]> {
 		this.lastQuery = query;
-		return this.core.getSuggestions(query);
+
+		const parsed = parseQuery(query);
+		const hasSubLink = parsed.headingPart !== undefined || parsed.blockPart !== undefined;
+
+		if (!hasSubLink) {
+			this.resolvedNote = null;
+			const results = await this.core.getSuggestions(query);
+			this.lastNoteSuggestions = results;
+			return results;
+		}
+
+		if (!this.resolvedNote && this.lastNoteSuggestions.length > 0) {
+			const idx = this.getSelectedIndex();
+			if (idx >= 0 && idx < this.lastNoteSuggestions.length) {
+				this.resolvedNote = this.lastNoteSuggestions[idx]!.note;
+			}
+		}
+
+		return this.core.getSuggestions(query, this.resolvedNote ?? undefined);
 	}
 
 	renderSuggestion(item: LinkSuggestion, el: HTMLElement): void {
@@ -56,6 +80,20 @@ export class NaturalLinkModal extends SuggestModal<LinkSuggestion> {
 		const link = this.core.buildRawLink(this.lastQuery);
 		this.editor.replaceSelection(link);
 		this.close();
+	}
+
+	/**
+	 * Read the currently highlighted index from Obsidian's internal
+	 * chooser.  Returns 0 when the internal API is unavailable.
+	 */
+	private getSelectedIndex(): number {
+		try {
+			const idx = (this as unknown as { chooser?: { selectedItem?: number } })
+				.chooser?.selectedItem;
+			return typeof idx === "number" ? idx : 0;
+		} catch {
+			return 0;
+		}
 	}
 
 	onNoSuggestion(): void {

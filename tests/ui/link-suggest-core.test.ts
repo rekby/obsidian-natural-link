@@ -50,9 +50,9 @@ describe("LinkSuggestCore.buildLink", () => {
 		expect(core.buildLink(item, "note|", false)).toBe("[[My Note|note]]");
 	});
 
-	it("falls back to full query when notePart is empty", () => {
+	it("omits display text when notePart is empty (bare #heading)", () => {
 		const item: LinkSuggestion = { type: "heading", note, heading: "H1", level: 1 };
-		expect(core.buildLink(item, "#heading", false)).toBe("[[My Note#H1|#heading]]");
+		expect(core.buildLink(item, "#heading", false)).toBe("[[My Note#H1]]");
 	});
 
 	it("trims whitespace from display text", () => {

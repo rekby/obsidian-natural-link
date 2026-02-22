@@ -10,8 +10,9 @@ import type NaturalLinkPlugin from "../main";
 import { MultiStemmer } from "../stemming/multi-stemmer";
 import { RussianStemmer } from "../stemming/russian-stemmer";
 import { EnglishStemmer } from "../stemming/english-stemmer";
-import { LinkSuggestion } from "../types";
+import { LinkSuggestion, NoteInfo } from "../types";
 import { LinkSuggestCore } from "./link-suggest-core";
+import { parseQuery } from "./query-parser";
 
 /**
  * Inline [[ link suggest powered by morphological search.
@@ -24,6 +25,11 @@ import { LinkSuggestCore } from "./link-suggest-core";
  */
 export class NaturalLinkSuggest extends EditorSuggest<LinkSuggestion> {
 	private readonly plugin: NaturalLinkPlugin;
+
+	/** Last note-level suggestions returned (before any #/^ sub-link). */
+	private lastNoteSuggestions: LinkSuggestion[] = [];
+	/** Note resolved from the user's highlighted selection, persisted while in sub-link mode. */
+	private resolvedNote: NoteInfo | null = null;
 
 	constructor(plugin: NaturalLinkPlugin) {
 		super(plugin.app);
@@ -62,7 +68,26 @@ export class NaturalLinkSuggest extends EditorSuggest<LinkSuggestion> {
 
 	async getSuggestions(context: EditorSuggestContext): Promise<LinkSuggestion[]> {
 		const core = this.buildCore();
-		return core.getSuggestions(context.query);
+		const parsed = parseQuery(context.query);
+		const hasSubLink = parsed.headingPart !== undefined || parsed.blockPart !== undefined;
+
+		if (!hasSubLink) {
+			// Note mode: remember suggestions and reset resolved note
+			this.resolvedNote = null;
+			const results = await core.getSuggestions(context.query);
+			this.lastNoteSuggestions = results;
+			return results;
+		}
+
+		// Sub-link mode: resolve the highlighted note on first entry
+		if (!this.resolvedNote && this.lastNoteSuggestions.length > 0) {
+			const idx = this.getSelectedIndex();
+			if (idx >= 0 && idx < this.lastNoteSuggestions.length) {
+				this.resolvedNote = this.lastNoteSuggestions[idx]!.note;
+			}
+		}
+
+		return core.getSuggestions(context.query, this.resolvedNote ?? undefined);
 	}
 
 	renderSuggestion(item: LinkSuggestion, el: HTMLElement): void {
@@ -102,6 +127,20 @@ export class NaturalLinkSuggest extends EditorSuggest<LinkSuggestion> {
 			recentNotes: this.plugin.recentNotes,
 			searchNonExistingNotes: () => this.plugin.settings.searchNonExistingNotes,
 		});
+	}
+
+	/**
+	 * Read the currently highlighted index from Obsidian's internal
+	 * suggestion container.  Returns 0 when the internal API is unavailable.
+	 */
+	private getSelectedIndex(): number {
+		try {
+			const idx = (this as unknown as { suggestions?: { selectedItem?: number } })
+				.suggestions?.selectedItem;
+			return typeof idx === "number" ? idx : 0;
+		} catch {
+			return 0;
+		}
 	}
 
 	private insertRawLink(): void {
@@ -148,6 +187,13 @@ export class NaturalLinkSuggest extends EditorSuggest<LinkSuggestion> {
 
 		const fullContent = ctx.query + afterContent;
 		const pipeIdx = fullContent.indexOf("|");
+
+		// Auto-closed brackets: [[ was followed by ]] with nothing between
+		// cursor and ]].  Treat as a new link — don't set explicitDisplay,
+		// but extend end past the closing brackets.
+		if (afterContent.length === 0 && pipeIdx === -1) {
+			return { end: newEnd };
+		}
 
 		if (pipeIdx !== -1) {
 			return { end: newEnd, explicitDisplay: fullContent.substring(pipeIdx + 1).trim() };
