@@ -16,9 +16,10 @@ An Obsidian plugin that lets you create links to notes using natural word forms.
 - **Alias support**: Searches across note titles and frontmatter aliases.
 - **Word order independence**: "box wooden" finds "Wooden box".
 - **Multi-language**: Russian and English stemming work simultaneously. The plugin determines word stems algorithmically, no dictionaries required.
+- **Heading and block links**: Use `#` to link to a specific heading (`note#heading`) or `^` to link to a block (`note^text`). The plugin searches for the note first, then shows matching headings or text blocks with previews. For `^`, all text blocks in the note are shown — blocks with existing IDs display them, and blocks without IDs get a unique one generated automatically. Use `|` to set explicit display text (`note|custom text`).
 - **Insert link as typed**: Press **Shift+Enter** to insert a link with your exact input as both target and display text, bypassing search results.
 - **Preserved display text**: Links are always created as `[[Note Title|your input]]`, so your original text is preserved even if the note is renamed.
-- **Inline `[[` suggest** (opt-in): Replace Obsidian's native link autocomplete with the plugin's morphological search. Suggestions appear inline as you type `[[`, without opening a separate modal. Enable in Settings → Natural link → "Replace native [[ link suggest".
+- **Inline `[[` suggest** (opt-in): Replace Obsidian's native link autocomplete with the plugin's morphological search. Suggestions appear inline as you type `[[`, with hotkey hints shown at the bottom. Enable in Settings → Natural link → "Replace native [[ link suggest".
 - **Localized UI**: Interface available in English and Russian. Language follows your Obsidian settings.
 
 ## Usage
