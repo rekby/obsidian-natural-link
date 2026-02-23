@@ -29,3 +29,27 @@ export interface SearchResult {
 	/** The alias that matched the query, if the best match was on an alias (not the title). */
 	matchedAlias?: string;
 }
+
+/**
+ * Unified suggestion item used by both the modal and inline EditorSuggest.
+ * Covers note matches, heading sub-links, and block reference sub-links.
+ */
+export type LinkSuggestion =
+	| { type: "note"; note: NoteInfo; matchedAlias?: string }
+	| { type: "heading"; note: NoteInfo; heading: string; level: number }
+	| {
+			type: "block";
+			note: NoteInfo;
+			/**
+			 * Existing block ID (from the file).  Undefined when the block has no
+			 * `^id` yet — the ID will be generated on selection.
+			 */
+			blockId?: string;
+			/** First line of the block text for display in the suggestion list. */
+			blockText: string;
+			/**
+			 * When set, the block has no existing ID.  `line` is the 0-based line
+			 * number where ` ^{blockId}` should be appended on selection.
+			 */
+			needsWrite?: { line: number };
+	  };

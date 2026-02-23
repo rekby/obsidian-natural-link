@@ -2,16 +2,10 @@ name: Tests
 
 on:
   pull_request:
-    branches:
-      - main
-      - master
-  push:
-    branches:
-      - main
-      - master
+    branches: ["**"]
 
 jobs:
-  test:
+  ci:
     runs-on: ubuntu-latest
 
     steps:
@@ -32,3 +26,6 @@ jobs:
 
       - name: Run tests
         run: npm test
+
+      - name: Run linter
+        run: npm run lint

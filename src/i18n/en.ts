@@ -6,10 +6,12 @@ export const en = {
 	"modal.instruction.insert-link": "Insert link",
 	"modal.instruction.insert-as-typed": "Insert link as typed",
 	"modal.instruction.dismiss": "Dismiss",
+	"modal.note-not-created": "(not yet created)",
+	"suggest.heading-badge": "Heading",
+	"suggest.block-badge": "Block",
 	"settings.title": "Natural link",
 	"settings.hotkey-button": "Set hotkey",
 	"settings.hotkey-description": "Assign a keyboard shortcut to quickly insert natural links",
-	"modal.note-not-created": "(not yet created)",
 	"settings.search-non-existing-notes": "Search non-existing notes",
 	"settings.search-non-existing-notes-description":
 		"Include notes that are referenced by links but do not exist yet in the vault",

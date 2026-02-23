@@ -15,14 +15,22 @@ export default tseslint.config(
 						'eslint.config.js',
 						'manifest.json',
 						'tests/*/*.ts',
-					]
+					],
+					maximumDefaultProjectFileMatchCount_THIS_WILL_SLOW_DOWN_LINTING: 20,
 				},
 				tsconfigRootDir: import.meta.dirname,
 				extraFileExtensions: ['.json']
 			},
 		},
 	},
-	...obsidianmd.configs.recommended,
+	// @ts-expect-error typing mismatch for configs
+	...(obsidianmd.configs?.recommendedWithLocalesEn ?? []),
+	{
+		plugins: { obsidianmd },
+		rules: {
+			"obsidianmd/ui/sentence-case-locale-module": "error",
+		}
+	},
 	globalIgnores([
 		"node_modules",
 		"dist",
