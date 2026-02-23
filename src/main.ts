@@ -15,6 +15,15 @@ export default class NaturalLinkPlugin extends Plugin {
 	settings: NaturalLinkSettings;
 	recentNotes: RecentNotes;
 
+	/** Cached items from the last buildNativeSuggestItems call. */
+	private lastSuggestItems: NativeSuggestItem[] = [];
+	/** Original user query saved when # or ^ is pressed, used as display text later. */
+	private pendingSpecialCharQuery: string | null = null;
+	/** Resolved note title for the pending special char (used for query substitution in heading/block mode). */
+	private pendingSpecialCharTitle: string | null = null;
+	/** Editor reference saved alongside pendingSpecialCharQuery. */
+	private pendingSpecialCharEditor: Editor | null = null;
+
 	async onload() {
 		await this.loadSettings();
 
