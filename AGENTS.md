@@ -185,6 +185,7 @@ npm run lint         # ESLint
 
 - **Keep `README.md`, `README.ru.md`, and `AGENTS.md` up to date**: when adding, changing, or removing features, update all three files to reflect the current state.
 - **Readability first**: these files should be well-structured and easy to read. When updating, don't just append new information — restructure sections as needed to maintain logical flow and avoid duplication. Remove outdated content.
+- **npm audit**: once per session, the agent must run `npm audit` and suggest fixing any identified vulnerabilities.
 - `README.md` is for the end user (English). `README.ru.md` is the Russian translation — keep it in sync with `README.md`.
 - `AGENTS.md` is for the AI agent: file structure, modules, algorithms, conventions, limitations. Keep it precise and navigable.
 
