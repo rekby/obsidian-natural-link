@@ -68,7 +68,6 @@ export default class NaturalLinkPlugin extends Plugin {
 			collectNotes: () => this.collectNotes(),
 			stemmer,
 			recentNotes: this.recentNotes,
-			searchNonExistingNotes: () => this.settings.searchNonExistingNotes,
 			prebuiltIndex: index,
 		});
 

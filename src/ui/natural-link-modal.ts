@@ -1,7 +1,8 @@
 import { App, Editor, SuggestModal } from "obsidian";
-import { LinkSuggestion, NoteInfo } from "../types";
+import { LinkSuggestion } from "../types";
 import { LinkSuggestCore } from "./link-suggest-core";
 import { parseQuery } from "./query-parser";
+import { SuggestSession } from "./suggest-session";
 import { t } from "../i18n";
 
 /**
@@ -14,11 +15,7 @@ export class NaturalLinkModal extends SuggestModal<LinkSuggestion> {
 	private readonly editor: Editor;
 	private readonly onNoteSelected: (title: string) => void;
 	private lastQuery = "";
-
-	/** Last note-level suggestions returned (before any #/^ sub-link). */
-	private lastNoteSuggestions: LinkSuggestion[] = [];
-	/** Note resolved from the user's highlighted selection, persisted while in sub-link mode. */
-	private resolvedNote: NoteInfo | null = null;
+	private readonly session = new SuggestSession();
 
 	constructor(
 		app: App,
@@ -46,20 +43,13 @@ export class NaturalLinkModal extends SuggestModal<LinkSuggestion> {
 		const hasSubLink = parsed.headingPart !== undefined || parsed.blockPart !== undefined;
 
 		if (!hasSubLink) {
-			this.resolvedNote = null;
 			const results = await this.core.getSuggestions(query);
-			this.lastNoteSuggestions = results;
+			this.session.updateNoteSuggestions(results);
 			return results;
 		}
 
-		if (!this.resolvedNote && this.lastNoteSuggestions.length > 0) {
-			const idx = this.getSelectedIndex();
-			if (idx >= 0 && idx < this.lastNoteSuggestions.length) {
-				this.resolvedNote = this.lastNoteSuggestions[idx]!.note;
-			}
-		}
-
-		return this.core.getSuggestions(query, this.resolvedNote ?? undefined);
+		const resolvedNote = this.session.getResolvedNote(() => this.getSelectedIndex());
+		return this.core.getSuggestions(query, resolvedNote);
 	}
 
 	renderSuggestion(item: LinkSuggestion, el: HTMLElement): void {

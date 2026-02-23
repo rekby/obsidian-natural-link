@@ -23,7 +23,14 @@ export default tseslint.config(
 			},
 		},
 	},
-	...obsidianmd.configs.recommended,
+	// @ts-expect-error typing mismatch for configs
+	...(obsidianmd.configs?.recommendedWithLocalesEn ?? []),
+	{
+		plugins: { obsidianmd },
+		rules: {
+			"obsidianmd/ui/sentence-case-locale-module": "error",
+		}
+	},
 	globalIgnores([
 		"node_modules",
 		"dist",

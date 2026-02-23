@@ -10,9 +10,10 @@ import type NaturalLinkPlugin from "../main";
 import { MultiStemmer } from "../stemming/multi-stemmer";
 import { RussianStemmer } from "../stemming/russian-stemmer";
 import { EnglishStemmer } from "../stemming/english-stemmer";
-import { LinkSuggestion, NoteInfo } from "../types";
+import { LinkSuggestion } from "../types";
 import { LinkSuggestCore } from "./link-suggest-core";
 import { parseQuery } from "./query-parser";
+import { SuggestSession } from "./suggest-session";
 
 /**
  * Inline [[ link suggest powered by morphological search.
@@ -25,11 +26,7 @@ import { parseQuery } from "./query-parser";
  */
 export class NaturalLinkSuggest extends EditorSuggest<LinkSuggestion> {
 	private readonly plugin: NaturalLinkPlugin;
-
-	/** Last note-level suggestions returned (before any #/^ sub-link). */
-	private lastNoteSuggestions: LinkSuggestion[] = [];
-	/** Note resolved from the user's highlighted selection, persisted while in sub-link mode. */
-	private resolvedNote: NoteInfo | null = null;
+	private readonly session = new SuggestSession();
 
 	constructor(plugin: NaturalLinkPlugin) {
 		super(plugin.app);
@@ -72,22 +69,13 @@ export class NaturalLinkSuggest extends EditorSuggest<LinkSuggestion> {
 		const hasSubLink = parsed.headingPart !== undefined || parsed.blockPart !== undefined;
 
 		if (!hasSubLink) {
-			// Note mode: remember suggestions and reset resolved note
-			this.resolvedNote = null;
 			const results = await core.getSuggestions(context.query);
-			this.lastNoteSuggestions = results;
+			this.session.updateNoteSuggestions(results);
 			return results;
 		}
 
-		// Sub-link mode: resolve the highlighted note on first entry
-		if (!this.resolvedNote && this.lastNoteSuggestions.length > 0) {
-			const idx = this.getSelectedIndex();
-			if (idx >= 0 && idx < this.lastNoteSuggestions.length) {
-				this.resolvedNote = this.lastNoteSuggestions[idx]!.note;
-			}
-		}
-
-		return core.getSuggestions(context.query, this.resolvedNote ?? undefined);
+		const resolvedNote = this.session.getResolvedNote(() => this.getSelectedIndex());
+		return core.getSuggestions(context.query, resolvedNote);
 	}
 
 	renderSuggestion(item: LinkSuggestion, el: HTMLElement): void {
@@ -125,7 +113,6 @@ export class NaturalLinkSuggest extends EditorSuggest<LinkSuggestion> {
 			collectNotes: () => this.plugin.collectNotes(),
 			stemmer: new MultiStemmer([new RussianStemmer(), new EnglishStemmer()]),
 			recentNotes: this.plugin.recentNotes,
-			searchNonExistingNotes: () => this.plugin.settings.searchNonExistingNotes,
 		});
 	}
 

@@ -26,7 +26,6 @@ export class LinkSuggestCore {
 	private readonly collectNotes: () => NoteInfo[];
 	private readonly stemmer: Stemmer;
 	private readonly recentNotes: RecentNotes;
-	private readonly searchNonExistingNotes: () => boolean;
 
 	/**
 	 * Optional pre-built index (used by the modal which builds once on open).
@@ -40,14 +39,12 @@ export class LinkSuggestCore {
 		collectNotes: () => NoteInfo[];
 		stemmer: Stemmer;
 		recentNotes: RecentNotes;
-		searchNonExistingNotes: () => boolean;
 		prebuiltIndex?: NotesIndex;
 	}) {
 		this.app = opts.app;
 		this.collectNotes = opts.collectNotes;
 		this.stemmer = opts.stemmer;
 		this.recentNotes = opts.recentNotes;
-		this.searchNonExistingNotes = opts.searchNonExistingNotes;
 		this.cachedIndex = opts.prebuiltIndex ?? null;
 	}
 
@@ -90,8 +87,7 @@ export class LinkSuggestCore {
 	 * Build a piped wikilink string from a suggestion and the raw query.
 	 * When `asTyped` is true, the raw query is used as both target and display
 	 * (Shift+Enter "insert as typed" behaviour).
-	 */
-	/**
+	 *
 	 * @param explicitDisplay — when defined, overrides the display text
 	 *   derived from the query.  Used when editing an existing link to
 	 *   preserve (or omit) the original display text.
