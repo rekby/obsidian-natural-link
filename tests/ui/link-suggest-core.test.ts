@@ -336,7 +336,6 @@ describe("LinkSuggestCore contextual priority boosting", () => {
 		expect(titles).toHaveLength(5);
 	});
 });
-
 // ----- Block suggestions: list items -----
 
 type SectionLike = {
@@ -432,7 +431,6 @@ describe("LinkSuggestCore.getSuggestions (block ^ with list items)", () => {
 		expect(blockTexts).toContain("- Almond");
 		expect(blockTexts).not.toContain("- Beta");
 	});
-
 	it("preserves existing ^id on list items and strips it from preview", async () => {
 		const note = makeNote("Note");
 		const app = makeAppForBlocks({
