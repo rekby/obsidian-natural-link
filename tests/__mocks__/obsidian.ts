@@ -14,3 +14,9 @@ export class SuggestModal {}
 export class EditorSuggest {}
 export class Setting {}
 export class Notice {}
+export class TFile {
+	path: string;
+	constructor(path: string) {
+		this.path = path;
+	}
+}

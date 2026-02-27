@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { LinkSuggestCore } from "../../src/ui/link-suggest-core";
 import { LinkSuggestion, NoteInfo } from "../../src/types";
+import { TFile } from "obsidian";
 
 function makeNote(title: string, path?: string): NoteInfo {
 	return { title, path: path ?? `${title}.md`, aliases: [] };
@@ -165,5 +166,102 @@ describe("LinkSuggestCore.getNoteTitle", () => {
 	it("returns the note title for a block suggestion without id", () => {
 		const item: LinkSuggestion = { type: "block", note: makeNote("Delta"), blockText: "text", needsWrite: { line: 5 } };
 		expect(core.getNoteTitle(item)).toBe("Delta");
+	});
+});
+
+// ----- Block suggestions: list items -----
+
+type SectionLike = {
+	id?: string;
+	type: string;
+	position: { start: { line: number }; end: { line: number } };
+};
+
+type ListItemLike = {
+	id?: string;
+	position: { start: { line: number }; end: { line: number } };
+};
+
+function makeAppForBlocks(opts: {
+	note: NoteInfo;
+	content: string;
+	sections: SectionLike[];
+	listItems?: ListItemLike[];
+}) {
+	const file = new TFile(opts.note.path);
+	return {
+		vault: {
+			getAbstractFileByPath: (path: string) => (path === opts.note.path ? file : null),
+			cachedRead: async (_f: unknown) => opts.content,
+			getMarkdownFiles: () => [],
+		},
+		metadataCache: {
+			getFileCache: (_f: unknown) => ({
+				sections: opts.sections,
+				listItems: opts.listItems ?? [],
+			}),
+		},
+	};
+}
+
+describe("LinkSuggestCore.getSuggestions (block ^ with list items)", () => {
+	it("returns all list items as individual block candidates", async () => {
+		const note = makeNote("Some note");
+		const app = makeAppForBlocks({
+			note,
+			content: "Some text:\n- Item 1\n- Item 2",
+			sections: [
+				{ type: "paragraph", position: { start: { line: 0 }, end: { line: 0 } } },
+				{ type: "list", position: { start: { line: 1 }, end: { line: 2 } } },
+			],
+			listItems: [
+				{ position: { start: { line: 1 }, end: { line: 1 } } },
+				{ position: { start: { line: 2 }, end: { line: 2 } } },
+			],
+		});
+		const core = new LinkSuggestCore({
+			app: app as never,
+			collectNotes: () => [note],
+			stemmer: { stem: (w: string) => [w] },
+			recentNotes: { toJSON: () => ({}), boostRecent: <T>(r: T[]) => r } as never,
+		});
+
+		const suggestions = await core.getSuggestions("Some note^");
+		const blockTexts = suggestions.map((s) => (s.type === "block" ? s.blockText : null)).filter(Boolean);
+
+		expect(blockTexts).toContain("Some text:");
+		expect(blockTexts).toContain("- Item 1");
+		expect(blockTexts).toContain("- Item 2");
+		expect(suggestions.every((s) => s.type === "block")).toBe(true);
+	});
+
+	it("filters list items by query prefix", async () => {
+		// Verify that the search filter works for individual list items
+		const note = makeNote("Note");
+		const app = makeAppForBlocks({
+			note,
+			content: "- Alpha\n- Beta\n- Almond",
+			sections: [
+				{ type: "list", position: { start: { line: 0 }, end: { line: 2 } } },
+			],
+			listItems: [
+				{ position: { start: { line: 0 }, end: { line: 0 } } },
+				{ position: { start: { line: 1 }, end: { line: 1 } } },
+				{ position: { start: { line: 2 }, end: { line: 2 } } },
+			],
+		});
+		const core = new LinkSuggestCore({
+			app: app as never,
+			collectNotes: () => [note],
+			stemmer: { stem: (w: string) => [w] },
+			recentNotes: { toJSON: () => ({}), boostRecent: <T>(r: T[]) => r } as never,
+		});
+
+		const suggestions = await core.getSuggestions("Note^Al");
+		const blockTexts = suggestions.map((s) => (s.type === "block" ? s.blockText : null)).filter(Boolean);
+
+		expect(blockTexts).toContain("- Alpha");
+		expect(blockTexts).toContain("- Almond");
+		expect(blockTexts).not.toContain("- Beta");
 	});
 });
