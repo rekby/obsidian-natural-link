@@ -28,6 +28,30 @@ describe("RussianStemmer", () => {
 		expect(unique.size).toBe(1);
 	});
 
+	it("normalizes group 1 consonant alternations to one stem", () => {
+		// г ↔ ж
+		expect(stemmer.stem("друг")[0]).toBe(stemmer.stem("дружить")[0]);
+		// к ↔ ч
+		expect(stemmer.stem("крик")[0]).toBe(stemmer.stem("кричу")[0]);
+		// х ↔ ш
+		expect(stemmer.stem("сухой")[0]).toBe(stemmer.stem("сушить")[0]);
+		// ст ↔ щ
+		expect(stemmer.stem("простить")[0]).toBe(stemmer.stem("прощу")[0]);
+		// б ↔ бл
+		expect(stemmer.stem("любить")[0]).toBe(stemmer.stem("люблю")[0]);
+	});
+
+	it("normalizes group 2 consonant alternations to one stem", () => {
+		// д ↔ ж
+		expect(stemmer.stem("ходить")[0]).toBe(stemmer.stem("хожу")[0]);
+		// з ↔ ж
+		expect(stemmer.stem("возить")[0]).toBe(stemmer.stem("вожу")[0]);
+		// т ↔ ч
+		expect(stemmer.stem("платить")[0]).toBe(stemmer.stem("плачу")[0]);
+		// с ↔ ш
+		expect(stemmer.stem("носить")[0]).toBe(stemmer.stem("ношу")[0]);
+	});
+
 	it("returns an array with a single stem", () => {
 		const result = stemmer.stem("коробка");
 		expect(Array.isArray(result)).toBe(true);
