@@ -251,11 +251,15 @@ export class LinkSuggestCore {
 	 * Build block suggestions from all sections in the note.
 	 * Sections with existing ^id markers keep their IDs.
 	 * Sections without IDs get a generated unique one (written on selection).
+	 * List sections are expanded into individual list items.
 	 */
 	private async buildBlockSuggestions(
 		note: NoteInfo,
 		file: TFile,
-		cache: { sections?: Array<{ id?: string; type: string; position: { start: { line: number }; end: { line: number } } }> },
+		cache: {
+			sections?: Array<{ id?: string; type: string; position: { start: { line: number }; end: { line: number } } }>;
+			listItems?: Array<{ id?: string; position: { start: { line: number }; end: { line: number } } }>;
+		},
 		query: string,
 	): Promise<LinkSuggestion[]> {
 		const sections = cache.sections ?? [];
@@ -264,6 +268,12 @@ export class LinkSuggestCore {
 		const content = await this.app.vault.cachedRead(file);
 		const lines = content.split("\n");
 
+		// Build a lookup from start-line number to list item for fast access.
+		const listItemsByLine = new Map<number, { id?: string; position: { start: { line: number }; end: { line: number } } }>();
+		for (const item of (cache.listItems ?? [])) {
+			listItemsByLine.set(item.position.start.line, item);
+		}
+
 		interface BlockCandidate {
 			preview: string;
 			existingId?: string;
@@ -271,17 +281,37 @@ export class LinkSuggestCore {
 		}
 		const candidates: BlockCandidate[] = [];
 		for (const section of sections) {
-			const firstLine = lines[section.position.start.line];
-			if (!firstLine || firstLine.trim().length === 0) continue;
 			if (section.type === "yaml") continue;
 
-			let preview = firstLine.trim();
-			const existingId = section.id;
-			if (existingId) {
-				preview = preview.replace(new RegExp(`\\s*\\^${escapeRegExp(existingId)}$`), "");
+			if (section.type === "list") {
+				// Expand the list section into individual list items so every
+				// item appears as its own block candidate.
+				for (let lineNum = section.position.start.line; lineNum <= section.position.end.line; lineNum++) {
+					const listItem = listItemsByLine.get(lineNum);
+					if (!listItem) continue;
+					const lineText = lines[lineNum];
+					if (!lineText || lineText.trim().length === 0) continue;
+
+					let preview = lineText.trim();
+					const existingId = listItem.id;
+					if (existingId) {
+						preview = preview.replace(new RegExp(`\\s*\\^${escapeRegExp(existingId)}$`), "");
+					}
+					preview = preview.substring(0, BLOCK_TEXT_MAX_LENGTH);
+					candidates.push({ preview, existingId, endLine: listItem.position.end.line });
+				}
+			} else {
+				const firstLine = lines[section.position.start.line];
+				if (!firstLine || firstLine.trim().length === 0) continue;
+
+				let preview = firstLine.trim();
+				const existingId = section.id;
+				if (existingId) {
+					preview = preview.replace(new RegExp(`\\s*\\^${escapeRegExp(existingId)}$`), "");
+				}
+				preview = preview.substring(0, BLOCK_TEXT_MAX_LENGTH);
+				candidates.push({ preview, existingId, endLine: section.position.end.line });
 			}
-			preview = preview.substring(0, BLOCK_TEXT_MAX_LENGTH);
-			candidates.push({ preview, existingId, endLine: section.position.end.line });
 		}
 
 		let orderedIndices: number[];
