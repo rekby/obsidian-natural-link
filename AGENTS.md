@@ -170,11 +170,21 @@ npm run lint         # ESLint
 - Adding a new language: create `src/i18n/xx.ts` with `Partial<typeof en>`, register in `src/i18n/index.ts` `locales` map
 - Compile-time key validation via `Partial<typeof en>` type
 
-## Plugin command
+## Plugin commands
 
-- **ID**: `insert-link`
-- **Type**: `editorCallback` (available only when editor is active)
-- **No default hotkey assigned**. Recommended: Cmd/Ctrl+Shift+K (documented in README). User assigns via Settings → Hotkeys.
+- **`insert-link`**
+  - Type: `editorCallback` (available only when editor is active)
+  - Behavior: opens `NaturalLinkModal` and inserts a selected link into the current editor.
+- **`toggle-inline-link-suggest`**
+  - Type: `callback`
+  - Behavior: toggles `settings.inlineLinkSuggest`, persists settings via `saveSettings()`, and shows a localized `Notice` (`enabled`/`disabled`).
+- **`enable-inline-link-suggest`**
+  - Type: `callback`
+  - Behavior: sets `settings.inlineLinkSuggest = true`, persists settings via `saveSettings()`, and shows localized `enabled` notice.
+- **`disable-inline-link-suggest`**
+  - Type: `callback`
+  - Behavior: sets `settings.inlineLinkSuggest = false`, persists settings via `saveSettings()`, and shows localized `disabled` notice.
+- **No default hotkey assigned**. Recommended: Cmd/Ctrl+Shift+K for `insert-link` (documented in README). User assigns shortcuts via Settings → Hotkeys.
 
 ## Known limitations
 

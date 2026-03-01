@@ -1,6 +1,8 @@
 export const en = {
 	"command.natural-link": "Insert natural link",
-	"command.toggle-inline-link-suggest": "Toggle [[ link suggest",
+	"command.toggle-inline-link-suggest": "Toggle \"replace native [[ suggest with natural\"",
+	"command.enable-inline-link-suggest": "Enable \"replace native [[ suggest with natural\"",
+	"command.disable-inline-link-suggest": "Disable \"replace native [[ suggest with natural\"",
 	"command.toggle-inline-link-suggest.enabled": "[[ suggest enabled",
 	"command.toggle-inline-link-suggest.disabled": "[[ suggest disabled",
 	"modal.placeholder": "Type to search notes...",

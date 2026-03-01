@@ -2,7 +2,12 @@ import type { en } from "./en";
 
 export const ru: Partial<typeof en> = {
 	"command.natural-link": "Вставить естественную ссылку",
-	"command.toggle-inline-link-suggest": "Переключить подсказки [[",
+	"command.toggle-inline-link-suggest":
+		"Переключить \"Заменить стандартные подсказки [[ естественными\"",
+	"command.enable-inline-link-suggest":
+		"Включить \"Заменить стандартные подсказки [[ естественными\"",
+	"command.disable-inline-link-suggest":
+		"Выключить \"Заменить стандартные подсказки [[ естественными\"",
 	"command.toggle-inline-link-suggest.enabled": "подсказки [[ включены",
 	"command.toggle-inline-link-suggest.disabled": "подсказки [[ отключены",
 	"modal.placeholder": "Начните вводить для поиска заметок...",

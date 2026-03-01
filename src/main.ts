@@ -30,12 +30,23 @@ export default class NaturalLinkPlugin extends Plugin {
 			id: "toggle-inline-link-suggest",
 			name: t("command.toggle-inline-link-suggest"),
 			callback: async () => {
-				this.settings.inlineLinkSuggest = !this.settings.inlineLinkSuggest;
-				await this.saveSettings();
-				const key = this.settings.inlineLinkSuggest
-					? "command.toggle-inline-link-suggest.enabled"
-					: "command.toggle-inline-link-suggest.disabled";
-				new Notice(t(key));
+				await this.setInlineLinkSuggest(!this.settings.inlineLinkSuggest);
+			},
+		});
+
+		this.addCommand({
+			id: "enable-inline-link-suggest",
+			name: t("command.enable-inline-link-suggest"),
+			callback: async () => {
+				await this.setInlineLinkSuggest(true);
+			},
+		});
+
+		this.addCommand({
+			id: "disable-inline-link-suggest",
+			name: t("command.disable-inline-link-suggest"),
+			callback: async () => {
+				await this.setInlineLinkSuggest(false);
 			},
 		});
 
@@ -157,6 +168,15 @@ export default class NaturalLinkPlugin extends Plugin {
 
 	async saveSettings() {
 		await this.saveData({ ...this.settings });
+	}
+
+	private async setInlineLinkSuggest(enabled: boolean): Promise<void> {
+		this.settings.inlineLinkSuggest = enabled;
+		await this.saveSettings();
+		const key = enabled
+			? "command.toggle-inline-link-suggest.enabled"
+			: "command.toggle-inline-link-suggest.disabled";
+		new Notice(t(key));
 	}
 
 	saveRecentNotes() {
