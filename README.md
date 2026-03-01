@@ -30,6 +30,14 @@ An Obsidian plugin that lets you create links to notes using natural word forms.
 
 **Tip**: Press **Shift+Enter** at any time to insert a link using your exact input as-is.
 
+**Command palette commands**:
+- **Insert natural link** (recommended hotkey: **Cmd/Ctrl+Shift+K**) — opens the natural link dialog.
+- **Toggle "replace native [[ suggest with natural"**
+- **Enable "replace native [[ suggest with natural"**
+- **Disable "replace native [[ suggest with natural"**
+
+The inline suggest commands let you control `[[` replacement without opening settings.
+
 ### Recommended hotkey
 
 The plugin does not assign a hotkey by default. We recommend **Cmd/Ctrl+Shift+K** (next to Cmd+K which is "Insert link" in Obsidian). To set it up:
