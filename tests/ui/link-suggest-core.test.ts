@@ -13,7 +13,6 @@ function makeCore(): LinkSuggestCore {
 		collectNotes: () => [],
 		stemmer: { stem: (w: string) => [w] },
 		recentNotes: { toJSON: () => ({}), boostRecent: <T>(r: T[]) => r } as never,
-		searchNonExistingNotes: () => false,
 	});
 }
 
@@ -263,5 +262,125 @@ describe("LinkSuggestCore.getSuggestions (block ^ with list items)", () => {
 		expect(blockTexts).toContain("- Alpha");
 		expect(blockTexts).toContain("- Almond");
 		expect(blockTexts).not.toContain("- Beta");
+	});
+
+	it("preserves existing ^id on list items and strips it from preview", async () => {
+		const note = makeNote("Note");
+		const app = makeAppForBlocks({
+			note,
+			content: "- First\n- Second ^abc123\n- Third",
+			sections: [
+				{ type: "list", position: { start: { line: 0 }, end: { line: 2 } } },
+			],
+			listItems: [
+				{ position: { start: { line: 0 }, end: { line: 0 } } },
+				{ id: "abc123", position: { start: { line: 1 }, end: { line: 1 } } },
+				{ position: { start: { line: 2 }, end: { line: 2 } } },
+			],
+		});
+		const core = new LinkSuggestCore({
+			app: app as never,
+			collectNotes: () => [note],
+			stemmer: { stem: (w: string) => [w] },
+			recentNotes: { toJSON: () => ({}), boostRecent: <T>(r: T[]) => r } as never,
+		});
+
+		const suggestions = await core.getSuggestions("Note^");
+		const second = suggestions.find((s) => s.type === "block" && s.blockText === "- Second");
+		expect(second).toBeDefined();
+		expect(second!.type === "block" && second!.blockId).toBe("abc123");
+		expect(second!.type === "block" && second!.needsWrite).toBeUndefined();
+
+		const first = suggestions.find((s) => s.type === "block" && s.blockText === "- First");
+		expect(first).toBeDefined();
+		expect(first!.type === "block" && first!.needsWrite).toBeTruthy();
+	});
+
+	it("strips ^id from multi-line list item preview", async () => {
+		const note = makeNote("Note");
+		const app = makeAppForBlocks({
+			note,
+			content: "- Multi\n  line ^xyz789\n- Single",
+			sections: [
+				{ type: "list", position: { start: { line: 0 }, end: { line: 2 } } },
+			],
+			listItems: [
+				{ id: "xyz789", position: { start: { line: 0 }, end: { line: 1 } } },
+				{ position: { start: { line: 2 }, end: { line: 2 } } },
+			],
+		});
+		const core = new LinkSuggestCore({
+			app: app as never,
+			collectNotes: () => [note],
+			stemmer: { stem: (w: string) => [w] },
+			recentNotes: { toJSON: () => ({}), boostRecent: <T>(r: T[]) => r } as never,
+		});
+
+		const suggestions = await core.getSuggestions("Note^");
+		const multi = suggestions.find((s) => s.type === "block" && s.blockId === "xyz789");
+		expect(multi).toBeDefined();
+		expect(multi!.type === "block" && multi!.blockText).toBe("- Multi\n  line");
+		expect(multi!.type === "block" && multi!.needsWrite).toBeUndefined();
+	});
+
+	it("expands nested list items individually with full text", async () => {
+		const note = makeNote("Note");
+		const app = makeAppForBlocks({
+			note,
+			content: "- Parent\n  - Child 1\n  - Child 2",
+			sections: [
+				{ type: "list", position: { start: { line: 0 }, end: { line: 2 } } },
+			],
+			listItems: [
+				{ position: { start: { line: 0 }, end: { line: 2 } } },
+				{ position: { start: { line: 1 }, end: { line: 1 } } },
+				{ position: { start: { line: 2 }, end: { line: 2 } } },
+			],
+		});
+		const core = new LinkSuggestCore({
+			app: app as never,
+			collectNotes: () => [note],
+			stemmer: { stem: (w: string) => [w] },
+			recentNotes: { toJSON: () => ({}), boostRecent: <T>(r: T[]) => r } as never,
+		});
+
+		const suggestions = await core.getSuggestions("Note^");
+		const blockTexts = suggestions.map((s) => (s.type === "block" ? s.blockText : null)).filter(Boolean);
+
+		expect(blockTexts).toContain("- Parent\n  - Child 1\n  - Child 2");
+		expect(blockTexts).toContain("- Child 1");
+		expect(blockTexts).toContain("- Child 2");
+		expect(blockTexts).toHaveLength(3);
+	});
+
+	it("includes continuation lines in multi-line list items", async () => {
+		const note = makeNote("Note");
+		const app = makeAppForBlocks({
+			note,
+			content: "- Item 1\n  continuation\n- Item 2",
+			sections: [
+				{ type: "list", position: { start: { line: 0 }, end: { line: 2 } } },
+			],
+			listItems: [
+				{ position: { start: { line: 0 }, end: { line: 1 } } },
+				{ position: { start: { line: 2 }, end: { line: 2 } } },
+			],
+		});
+		const core = new LinkSuggestCore({
+			app: app as never,
+			collectNotes: () => [note],
+			stemmer: { stem: (w: string) => [w] },
+			recentNotes: { toJSON: () => ({}), boostRecent: <T>(r: T[]) => r } as never,
+		});
+
+		const suggestions = await core.getSuggestions("Note^");
+		const blockTexts = suggestions.map((s) => (s.type === "block" ? s.blockText : null)).filter(Boolean);
+
+		expect(blockTexts).toContain("- Item 1\n  continuation");
+		expect(blockTexts).toContain("- Item 2");
+		expect(blockTexts).toHaveLength(2);
+
+		const item1 = suggestions.find((s) => s.type === "block" && s.blockText === "- Item 1\n  continuation");
+		expect(item1!.type === "block" && item1!.needsWrite).toEqual({ line: 1 });
 	});
 });

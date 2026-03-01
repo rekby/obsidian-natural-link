@@ -13,3 +13,7 @@
 	font-style: italic;
 	margin-left: 0.5em;
 }
+
+.natural-link-block-text {
+	white-space: pre-wrap;
+}

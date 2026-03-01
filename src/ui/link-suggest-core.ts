@@ -289,10 +289,11 @@ export class LinkSuggestCore {
 				for (let lineNum = section.position.start.line; lineNum <= section.position.end.line; lineNum++) {
 					const listItem = listItemsByLine.get(lineNum);
 					if (!listItem) continue;
-					const lineText = lines[lineNum];
-					if (!lineText || lineText.trim().length === 0) continue;
+					const itemLines = lines.slice(listItem.position.start.line, listItem.position.end.line + 1);
+					const joinedText = itemLines.join("\n");
+					if (joinedText.trim().length === 0) continue;
 
-					let preview = lineText.trim();
+					let preview = joinedText.trim();
 					const existingId = listItem.id;
 					if (existingId) {
 						preview = preview.replace(new RegExp(`\\s*\\^${escapeRegExp(existingId)}$`), "");
@@ -438,7 +439,7 @@ export class LinkSuggestCore {
 		item: Extract<LinkSuggestion, { type: "block" }>,
 		el: HTMLElement,
 	): void {
-		el.createEl("div", { text: item.blockText, cls: "suggestion-title" });
+		el.createEl("div", { text: item.blockText, cls: "suggestion-title natural-link-block-text" });
 		if (item.blockId) {
 			el.createEl("small", {
 				text: `^${item.blockId}`,
