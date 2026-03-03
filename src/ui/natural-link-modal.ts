@@ -34,6 +34,10 @@ export class NaturalLinkModal extends SuggestModal<LinkSuggestion> {
 			this.insertRawLink();
 			return false;
 		});
+		this.scope.register([], "Tab", () => {
+			this.insertLinkWithoutDisplay();
+			return false;
+		});
 	}
 
 	async getSuggestions(query: string): Promise<LinkSuggestion[]> {
@@ -56,9 +60,10 @@ export class NaturalLinkModal extends SuggestModal<LinkSuggestion> {
 		this.core.renderSuggestion(item, el);
 	}
 
-	onChooseSuggestion(item: LinkSuggestion, _evt: MouseEvent | KeyboardEvent): void {
+	onChooseSuggestion(item: LinkSuggestion, evt: MouseEvent | KeyboardEvent): void {
+		const withoutDisplay = evt instanceof KeyboardEvent && evt.key === "Tab";
 		this.core.prepareBlockId(item);
-		const link = this.core.buildLink(item, this.lastQuery, false);
+		const link = this.core.buildLink(item, this.lastQuery, false, withoutDisplay ? "" : undefined);
 		this.editor.replaceSelection(link);
 		this.onNoteSelected(this.core.getNoteTitle(item));
 		void this.core.writeBlockIdIfNeeded(item);
@@ -69,6 +74,13 @@ export class NaturalLinkModal extends SuggestModal<LinkSuggestion> {
 		if (raw.length === 0) return;
 		const link = this.core.buildRawLink(this.lastQuery);
 		this.editor.replaceSelection(link);
+		this.close();
+	}
+
+	private insertLinkWithoutDisplay(): void {
+		const item = this.getSelectedSuggestion();
+		if (!item) return;
+		this.onChooseSuggestion(item, new KeyboardEvent("keydown", { key: "Tab" }));
 		this.close();
 	}
 
@@ -83,6 +95,20 @@ export class NaturalLinkModal extends SuggestModal<LinkSuggestion> {
 			return typeof idx === "number" ? idx : 0;
 		} catch {
 			return 0;
+		}
+	}
+
+	private getSelectedSuggestion(): LinkSuggestion | null {
+		try {
+			const chooser = (this as unknown as {
+				chooser?: { values?: LinkSuggestion[]; selectedItem?: number };
+			}).chooser;
+			const values = chooser?.values;
+			if (!values || values.length === 0) return null;
+			const idx = chooser.selectedItem ?? 0;
+			return values[idx] ?? null;
+		} catch {
+			return null;
 		}
 	}
 

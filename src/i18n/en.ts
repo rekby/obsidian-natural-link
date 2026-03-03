@@ -4,6 +4,7 @@ export const en = {
 	"modal.no-results": "No matching notes found",
 	"modal.instruction.navigate": "Navigate",
 	"modal.instruction.insert-link": "Insert link",
+	"modal.instruction.insert-without-display": "Insert link without display text",
 	"modal.instruction.insert-as-typed": "Insert link as typed",
 	"modal.instruction.dismiss": "Dismiss",
 	"modal.note-not-created": "(not yet created)",

@@ -38,6 +38,10 @@ export class NaturalLinkSuggest extends EditorSuggest<LinkSuggestion> {
 			this.insertRawLink();
 			return false;
 		});
+		this.scope.register([], "Tab", () => {
+			this.insertLinkWithoutDisplay();
+			return false;
+		});
 	}
 
 	onTrigger(
@@ -89,12 +93,14 @@ export class NaturalLinkSuggest extends EditorSuggest<LinkSuggestion> {
 
 		const core = this.buildCore();
 		const asTyped = evt instanceof KeyboardEvent && evt.shiftKey;
+		const withoutDisplay = evt instanceof KeyboardEvent && evt.key === "Tab";
 
 		if (!asTyped) {
 			core.prepareBlockId(item);
 		}
 
-		const { end, explicitDisplay } = this.resolveEditingContext(ctx);
+		const { end, explicitDisplay: editedDisplay } = this.resolveEditingContext(ctx);
+		const explicitDisplay = withoutDisplay ? "" : editedDisplay;
 		const link = core.buildLink(item, ctx.query, asTyped, explicitDisplay);
 		this.replaceRange(ctx.editor, ctx.start, end, link);
 		this.close();
@@ -130,6 +136,20 @@ export class NaturalLinkSuggest extends EditorSuggest<LinkSuggestion> {
 		}
 	}
 
+	private getSelectedSuggestion(): LinkSuggestion | null {
+		try {
+			const holder = this as unknown as {
+				suggestions?: { values?: LinkSuggestion[]; selectedItem?: number };
+			};
+			const values = holder.suggestions?.values;
+			if (!values || values.length === 0) return null;
+			const idx = holder.suggestions?.selectedItem ?? 0;
+			return values[idx] ?? null;
+		} catch {
+			return null;
+		}
+	}
+
 	private insertRawLink(): void {
 		const ctx = this.context;
 		if (!ctx) return;
@@ -142,6 +162,12 @@ export class NaturalLinkSuggest extends EditorSuggest<LinkSuggestion> {
 		const link = core.buildRawLink(ctx.query);
 		this.replaceRange(ctx.editor, ctx.start, end, link);
 		this.close();
+	}
+
+	private insertLinkWithoutDisplay(): void {
+		const item = this.getSelectedSuggestion();
+		if (!item) return;
+		this.selectSuggestion(item, new KeyboardEvent("keydown", { key: "Tab" }));
 	}
 
 	/**

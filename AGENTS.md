@@ -61,7 +61,7 @@ tests/
 - **i18n** (`i18n/`): Simple key-value translations. `en.ts` is the base language (all keys required). Other locales use `Partial<typeof en>` for compile-time key validation. Locale detected via `moment.locale()`.
 - **parseQuery** (`ui/query-parser.ts`): Splits a raw wikilink query by `|` (display text), `#` (heading), and `^` (block reference). `|` is checked first, then `#` or `^` within the link target. Returns a `ParsedQuery` with `notePart`, optional `headingPart`/`blockPart`/`displayPart`.
 - **LinkSuggestCore** (`ui/link-suggest-core.ts`): Shared logic for both the modal and inline suggest. Receives dependencies (app, note collector, stemmer, recentNotes, settings) and provides `getSuggestions()` (async), `renderSuggestion()`, `buildLink()`, `buildRawLink()`, `writeBlockIdIfNeeded()`. Handles query parsing, morphological search, heading/block sub-link resolution (including section-based block suggestions with ID generation), and unified rendering. Both UI wrappers delegate to this class.
-- **NaturalLinkModal** (`ui/natural-link-modal.ts`): Obsidian `SuggestModal<LinkSuggestion>` wrapper. Delegates to `LinkSuggestCore` for all search, rendering, and link-building logic. Handles Shift+Enter for raw link insertion.
+- **NaturalLinkModal** (`ui/natural-link-modal.ts`): Obsidian `SuggestModal<LinkSuggestion>` wrapper. Delegates to `LinkSuggestCore` for all search, rendering, and link-building logic. Handles `Tab` for inserting links without display text and `Shift+Enter` for raw link insertion.
 - **NaturalLinkSuggest** (`ui/natural-link-suggest.ts`): Obsidian `EditorSuggest<LinkSuggestion>` registered via `registerEditorSuggest()`. Moved to front of internal suggests array via `prioritizeSuggest()` so it is checked before the native `[[` suggest. Triggers on `[[` when `inlineLinkSuggest` is enabled; returns `null` from `onTrigger` when disabled (native suggest takes over). Shows hotkey hints via `setInstructions`. Delegates to `LinkSuggestCore` for search/rendering.
 
 ### LinkSuggestion type
@@ -111,22 +111,23 @@ Both the modal and the inline suggest share the same data flow through `LinkSugg
 5. If empty query: return recent notes from `RecentNotes`
 6. Results boosted by `RecentNotes.boostRecent()`
 7. On selection (Enter): `buildLink()` → `[[target|display]]` via editor
-8. On Shift+Enter: `buildRawLink()` → `[[raw|raw]]` via editor
+8. On `Tab`: `buildLink(..., explicitDisplay: "")` → `[[target]]` via editor (also for heading/block targets with `#` / `^`)
+9. On Shift+Enter: `buildRawLink()` → `[[raw|raw]]` via editor
 
 #### Modal (command/hotkey)
 
 1. User invokes command → `main.ts` collects `NoteInfo[]`, builds `NotesIndex` + `LinkSuggestCore`
 2. Opens `NaturalLinkModal` with the pre-built core (index built once)
 3. On each keystroke: `core.getSuggestions(query)` returns ranked `LinkSuggestion[]`
-4. On selection: `core.buildLink()` → `editor.replaceSelection(link)`
+4. On Enter: `core.buildLink()` → piped link insertion; on Tab: `core.buildLink(..., explicitDisplay: "")` → link without display text
 
 #### Inline suggest (`[[` trigger)
 
 1. User types `[[` → `NaturalLinkSuggest.onTrigger()` detects `[[`, extracts query
 2. Our suggest is placed at the front of the internal suggests array (`prioritizeSuggest()`) so it fires before the native `[[` suggest. Returns `null` when `inlineLinkSuggest` is disabled (native suggest handles it).
 3. `getSuggestions()` builds a fresh `LinkSuggestCore` per call (notes may change)
-4. On selection: `core.buildLink()` → replaces range from `[[` to `]]` inclusive; for block suggestions with generated IDs, `core.writeBlockIdIfNeeded()` writes `^id` to the target file
-5. Shows instruction bar with hotkey hints (Shift+Enter, etc.)
+4. On Enter: `core.buildLink()` replaces range from `[[` to `]]` inclusive; on Tab: inserts link without display text. For block suggestions with generated IDs, `core.writeBlockIdIfNeeded()` writes `^id` to the target file
+5. Shows instruction bar with hotkey hints (Tab, Shift+Enter, etc.)
 
 ## Environment & tooling
 
@@ -160,7 +161,7 @@ npm run lint         # ESLint
 - Each file has a single responsibility.
 - `Stemmer` interface designed for extensibility (future: lemmatization via `lemmatize?()` method).
 - All UI strings go through `t(key)` for i18n.
-- Links always use piped format `[[Title|displayText]]` to preserve user input on note rename.
+- Enter inserts piped links `[[Title|displayText]]` to preserve typed text on note rename; Tab inserts links without display `[[Title]]` for IDE-style completion.
 - Both UIs (modal and inline suggest) delegate to `LinkSuggestCore` — no duplicated logic.
 
 ## i18n
