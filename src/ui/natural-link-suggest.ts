@@ -32,7 +32,7 @@ export class NaturalLinkSuggest extends EditorSuggest<LinkSuggestion> {
 		super(plugin.app);
 		this.plugin = plugin;
 
-		this.setInstructions(LinkSuggestCore.getInstructions());
+		this.setInstructions(LinkSuggestCore.getInstructions(plugin.settings.swapEnterAndTab));
 
 		this.scope.register(["Shift"], "Enter", () => {
 			this.insertRawLink();
@@ -93,7 +93,8 @@ export class NaturalLinkSuggest extends EditorSuggest<LinkSuggestion> {
 
 		const core = this.buildCore();
 		const asTyped = evt instanceof KeyboardEvent && evt.shiftKey;
-		const withoutDisplay = evt instanceof KeyboardEvent && evt.key === "Tab";
+		const isTab = evt instanceof KeyboardEvent && evt.key === "Tab";
+		const withoutDisplay = isTab !== this.plugin.settings.swapEnterAndTab;
 
 		if (!asTyped) {
 			core.prepareBlockId(item);

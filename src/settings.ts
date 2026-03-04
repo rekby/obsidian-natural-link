@@ -9,12 +9,15 @@ export interface NaturalLinkSettings {
 	searchNonExistingNotes: boolean;
 	/** Whether to replace native [[ link suggest with the plugin's morphological search */
 	inlineLinkSuggest: boolean;
+	/** Whether to swap Enter (insert with display) and Tab (insert without display) key actions */
+	swapEnterAndTab: boolean;
 }
 
 export const DEFAULT_SETTINGS: NaturalLinkSettings = {
 	version: 1,
 	searchNonExistingNotes: true,
 	inlineLinkSuggest: false,
+	swapEnterAndTab: false,
 };
 
 export class NaturalLinkSettingTab extends PluginSettingTab {
@@ -49,6 +52,18 @@ export class NaturalLinkSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.inlineLinkSuggest)
 					.onChange(async (value) => {
 						this.plugin.settings.inlineLinkSuggest = value;
+						await this.plugin.saveSettings();
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName(t("settings.swap-enter-and-tab"))
+			.setDesc(t("settings.swap-enter-and-tab-description"))
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.swapEnterAndTab)
+					.onChange(async (value) => {
+						this.plugin.settings.swapEnterAndTab = value;
 						await this.plugin.saveSettings();
 					}),
 			);

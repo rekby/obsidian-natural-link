@@ -39,6 +39,7 @@ Settings are stored in `data.json` (synced via Obsidian Sync). Device-local stat
 - `version` (`number`): Schema version for future migrations. Current: `1`.
 - `searchNonExistingNotes` (`boolean`, default `true`): Include unresolved `[[links]]` in search results via `metadataCache.unresolvedLinks`.
 - `inlineLinkSuggest` (`boolean`, default `false`): Controls whether plugin suggest takes over `[[` trigger.
+- `swapEnterAndTab` (`boolean`, default `false`): When true, Enter inserts without display text and Tab inserts with display text (opposite of default).
 
 ### `localStorage` (device-local, not synced)
 

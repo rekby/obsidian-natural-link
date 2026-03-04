@@ -27,7 +27,11 @@ export const ru: Partial<typeof en> = {
 	"settings.search-non-existing-notes-description":
 		"Включить в результаты поиска заметки, на которые есть ссылки, но которые ещё не созданы",
 	"settings.inline-link-suggest":
-		"Заменить стандартные подсказки [[ (экспериментально)",
+		"Заменить стандартные подсказки [[",
 	"settings.inline-link-suggest-description":
 		"Использовать морфологический поиск плагина вместо стандартного автодополнения при вводе [[",
+	"settings.swap-enter-and-tab":
+		"Поменять местами Enter и Tab (экспериментально)",
+	"settings.swap-enter-and-tab-description":
+		"Если включено: Enter вставляет ссылку без отображаемого текста [[Заголовок]], Tab вставляет ссылку с отображаемым текстом [[Заголовок|текст]]",
 };

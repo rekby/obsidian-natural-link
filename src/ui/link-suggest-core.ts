@@ -167,11 +167,17 @@ export class LinkSuggestCore {
 
 	// ----- Shared instruction set for both UIs -----
 
-	static getInstructions(): Instruction[] {
+	static getInstructions(swapped = false): Instruction[] {
 		return [
 			{ command: "↑↓", purpose: t("modal.instruction.navigate") },
-			{ command: "↵", purpose: t("modal.instruction.insert-link") },
-			{ command: "tab", purpose: t("modal.instruction.insert-without-display") },
+			{
+				command: "↵",
+				purpose: t(swapped ? "modal.instruction.insert-without-display" : "modal.instruction.insert-link"),
+			},
+			{
+				command: "tab",
+				purpose: t(swapped ? "modal.instruction.insert-link" : "modal.instruction.insert-without-display"),
+			},
 			{ command: "shift ↵", purpose: t("modal.instruction.insert-as-typed") },
 			{ command: "esc", purpose: t("modal.instruction.dismiss") },
 		];
