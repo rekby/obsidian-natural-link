@@ -1,6 +1,10 @@
 import { App, Instruction, TFile } from "obsidian";
 import { NotesIndex } from "../search/notes-index";
-import { RecentNotes, MAX_BOOST_COUNT } from "../search/recent-notes";
+import { RecentNotes } from "../search/recent-notes";
+import {
+	buildContextPriorityTitles,
+	reorderByPriority,
+} from "../search/context-priority";
 import { NoteInfo, Stemmer, LinkSuggestion } from "../types";
 import { parseQuery, ParsedQuery } from "./query-parser";
 import { t } from "../i18n";
@@ -189,7 +193,12 @@ export class LinkSuggestCore {
 			note: r.note,
 			matchedAlias: r.matchedAlias,
 		}));
-		return this.recentNotes.boostRecent(suggestions, (s) => s.note.title, MAX_BOOST_COUNT);
+		const priorityTitles = buildContextPriorityTitles({
+			app: this.app,
+			recentNotes: this.recentNotes,
+			relevantCandidates: results.map((r) => r.note),
+		});
+		return reorderByPriority(suggestions, (s) => s.note.title, priorityTitles);
 	}
 
 	/**
@@ -381,19 +390,20 @@ export class LinkSuggestCore {
 	}
 
 	private getRecentSuggestions(): LinkSuggestion[] {
-		const recentData = this.recentNotes.toJSON();
-		const sorted = Object.entries(recentData).sort((a, b) => b[1] - a[1]);
-
 		const notes = this.collectNotes();
-		const notesByTitle = new Map(notes.map((n) => [n.title, n]));
+		const priorityTitles = buildContextPriorityTitles({
+			app: this.app,
+			recentNotes: this.recentNotes,
+			relevantCandidates: notes,
+		});
 
+		const notesByTitle = new Map(notes.map((n) => [n.title, n]));
 		const suggestions: LinkSuggestion[] = [];
-		for (const [title] of sorted) {
+		for (const title of priorityTitles) {
 			const note = notesByTitle.get(title);
 			if (note) {
 				suggestions.push({ type: "note", note });
 			}
-			if (suggestions.length >= MAX_BOOST_COUNT) break;
 		}
 		return suggestions;
 	}

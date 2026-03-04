@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { LinkSuggestCore } from "../../src/ui/link-suggest-core";
 import { LinkSuggestion, NoteInfo } from "../../src/types";
 import { TFile } from "obsidian";
+import { RecentNotes } from "../../src/search/recent-notes";
 
 function makeNote(title: string, path?: string): NoteInfo {
 	return { title, path: path ?? `${title}.md`, aliases: [] };
@@ -12,8 +13,44 @@ function makeCore(): LinkSuggestCore {
 		app: {} as never,
 		collectNotes: () => [],
 		stemmer: { stem: (w: string) => [w] },
-		recentNotes: { toJSON: () => ({}), boostRecent: <T>(r: T[]) => r } as never,
+		recentNotes: makeNoopRecentNotes(),
 	});
+}
+
+function makeNoopRecentNotes(): never {
+	return {
+		toJSON: () => ({}),
+		boostRecent: <T>(r: T[]) => r,
+		getTop: () => [],
+		getTopTitles: () => [],
+	} as never;
+}
+
+function makePriorityApp(
+	openTitles: string[],
+	mtimeByPath: Record<string, number>,
+): unknown {
+	const filesByPath = new Map<string, TFile>();
+	for (const [path, mtime] of Object.entries(mtimeByPath)) {
+		const file = new TFile(path) as TFile & { stat?: { mtime: number } };
+		file.stat = { mtime };
+		filesByPath.set(path, file);
+	}
+	const makeLeaf = (title: string) => ({ view: { file: { basename: title } } });
+
+	return {
+		vault: {
+			getAbstractFileByPath: (path: string) => filesByPath.get(path) ?? null,
+			getMarkdownFiles: () => [...filesByPath.values()],
+		},
+		workspace: {
+			getMostRecentLeaf: () => (openTitles.length > 0 ? makeLeaf(openTitles[0]!) : null),
+			getLeavesOfType: (_type: string) => openTitles.map((title) => makeLeaf(title)),
+		},
+		metadataCache: {
+			getFileCache: (_f: unknown) => null,
+		},
+	};
 }
 
 describe("LinkSuggestCore.buildLink", () => {
@@ -173,6 +210,133 @@ describe("LinkSuggestCore.getNoteTitle", () => {
 	});
 });
 
+describe("LinkSuggestCore contextual priority boosting", () => {
+	it("reorders relevant note suggestions by context priority tiers", async () => {
+		const now = Date.now();
+		const notes = [
+			makeNote("Rel A", "Rel A.md"),
+			makeNote("Rel B", "Rel B.md"),
+			makeNote("Rel C", "Rel C.md"),
+			makeNote("Rel D", "Rel D.md"),
+			makeNote("Rel E", "Rel E.md"),
+		];
+
+		const app = makePriorityApp(
+			["Rel B", "Rel E", "Rel D"],
+			{
+				"Rel A.md": now - 60_000,
+				"Rel B.md": now - 30_000,
+				"Rel C.md": now - 20_000,
+				"Rel D.md": now - 700_000,
+				"Rel E.md": now - 800_000,
+			},
+		);
+
+		const recent = new RecentNotes({
+			"Rel A": now - 60_000,
+			"Rel D": now - 700_000,
+		});
+
+		const core = new LinkSuggestCore({
+			app: app as never,
+			collectNotes: () => notes,
+			stemmer: { stem: (w: string) => [w.toLowerCase()] },
+			recentNotes: recent,
+		});
+
+		const suggestions = await core.getSuggestions("rel");
+		const titles = suggestions
+			.filter((s): s is Extract<LinkSuggestion, { type: "note" }> => s.type === "note")
+			.map((s) => s.note.title);
+
+		expect(titles.slice(0, 5)).toEqual([
+			"Rel B",
+			"Rel C",
+			"Rel A",
+			"Rel E",
+			"Rel D",
+		]);
+	});
+
+	it("does not inject non-relevant notes into non-empty query results", async () => {
+		const now = Date.now();
+		const notes = [
+			makeNote("Alpha", "Alpha.md"),
+			makeNote("Beta", "Beta.md"),
+			makeNote("Gamma", "Gamma.md"),
+		];
+		const app = makePriorityApp(
+			["Beta", "Gamma"],
+			{
+				"Alpha.md": now - 10_000,
+				"Beta.md": now - 10_000,
+				"Gamma.md": now - 10_000,
+			},
+		);
+		const recent = new RecentNotes({
+			Beta: now - 10_000,
+			Gamma: now - 10_000,
+		});
+
+		const core = new LinkSuggestCore({
+			app: app as never,
+			collectNotes: () => notes,
+			stemmer: { stem: (w: string) => [w.toLowerCase()] },
+			recentNotes: recent,
+		});
+
+		const suggestions = await core.getSuggestions("alp");
+		const titles = suggestions
+			.filter((s): s is Extract<LinkSuggestion, { type: "note" }> => s.type === "note")
+			.map((s) => s.note.title);
+
+		expect(titles).toEqual(["Alpha"]);
+	});
+
+	it("uses contextual priority list for empty query", async () => {
+		const now = Date.now();
+		const notes = [
+			makeNote("Rel A", "Rel A.md"),
+			makeNote("Rel B", "Rel B.md"),
+			makeNote("Rel C", "Rel C.md"),
+			makeNote("Rel D", "Rel D.md"),
+			makeNote("Rel E", "Rel E.md"),
+			makeNote("Rel F", "Rel F.md"),
+		];
+		const app = makePriorityApp(
+			["Rel B", "Rel E", "Rel D"],
+			{
+				"Rel A.md": now - 60_000,
+				"Rel B.md": now - 30_000,
+				"Rel C.md": now - 20_000,
+				"Rel D.md": now - 700_000,
+				"Rel E.md": now - 800_000,
+				"Rel F.md": now - 900_000,
+			},
+		);
+		const recent = new RecentNotes({
+			"Rel A": now - 60_000,
+			"Rel D": now - 700_000,
+			"Rel F": now - 1_000_000,
+		});
+
+		const core = new LinkSuggestCore({
+			app: app as never,
+			collectNotes: () => notes,
+			stemmer: { stem: (w: string) => [w.toLowerCase()] },
+			recentNotes: recent,
+		});
+
+		const suggestions = await core.getSuggestions("");
+		const titles = suggestions
+			.filter((s): s is Extract<LinkSuggestion, { type: "note" }> => s.type === "note")
+			.map((s) => s.note.title);
+
+		expect(titles).toEqual(["Rel B", "Rel C", "Rel A", "Rel E", "Rel D"]);
+		expect(titles).toHaveLength(5);
+	});
+});
+
 // ----- Block suggestions: list items -----
 
 type SectionLike = {
@@ -227,7 +391,7 @@ describe("LinkSuggestCore.getSuggestions (block ^ with list items)", () => {
 			app: app as never,
 			collectNotes: () => [note],
 			stemmer: { stem: (w: string) => [w] },
-			recentNotes: { toJSON: () => ({}), boostRecent: <T>(r: T[]) => r } as never,
+			recentNotes: makeNoopRecentNotes(),
 		});
 
 		const suggestions = await core.getSuggestions("Some note^");
@@ -258,7 +422,7 @@ describe("LinkSuggestCore.getSuggestions (block ^ with list items)", () => {
 			app: app as never,
 			collectNotes: () => [note],
 			stemmer: { stem: (w: string) => [w] },
-			recentNotes: { toJSON: () => ({}), boostRecent: <T>(r: T[]) => r } as never,
+			recentNotes: makeNoopRecentNotes(),
 		});
 
 		const suggestions = await core.getSuggestions("Note^Al");
@@ -287,7 +451,7 @@ describe("LinkSuggestCore.getSuggestions (block ^ with list items)", () => {
 			app: app as never,
 			collectNotes: () => [note],
 			stemmer: { stem: (w: string) => [w] },
-			recentNotes: { toJSON: () => ({}), boostRecent: <T>(r: T[]) => r } as never,
+			recentNotes: makeNoopRecentNotes(),
 		});
 
 		const suggestions = await core.getSuggestions("Note^");
@@ -318,7 +482,7 @@ describe("LinkSuggestCore.getSuggestions (block ^ with list items)", () => {
 			app: app as never,
 			collectNotes: () => [note],
 			stemmer: { stem: (w: string) => [w] },
-			recentNotes: { toJSON: () => ({}), boostRecent: <T>(r: T[]) => r } as never,
+			recentNotes: makeNoopRecentNotes(),
 		});
 
 		const suggestions = await core.getSuggestions("Note^");
@@ -346,7 +510,7 @@ describe("LinkSuggestCore.getSuggestions (block ^ with list items)", () => {
 			app: app as never,
 			collectNotes: () => [note],
 			stemmer: { stem: (w: string) => [w] },
-			recentNotes: { toJSON: () => ({}), boostRecent: <T>(r: T[]) => r } as never,
+			recentNotes: makeNoopRecentNotes(),
 		});
 
 		const suggestions = await core.getSuggestions("Note^");
@@ -375,7 +539,7 @@ describe("LinkSuggestCore.getSuggestions (block ^ with list items)", () => {
 			app: app as never,
 			collectNotes: () => [note],
 			stemmer: { stem: (w: string) => [w] },
-			recentNotes: { toJSON: () => ({}), boostRecent: <T>(r: T[]) => r } as never,
+			recentNotes: makeNoopRecentNotes(),
 		});
 
 		const suggestions = await core.getSuggestions("Note^");

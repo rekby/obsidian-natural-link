@@ -74,6 +74,35 @@ describe("RecentNotes", () => {
 		});
 	});
 
+	describe("getTop and getTopTitles", () => {
+		it("returns top entries sorted by recency", () => {
+			const recent = new RecentNotes({
+				C: 3000,
+				A: 1000,
+				B: 2000,
+			});
+			expect(recent.getTop(2)).toEqual([
+				{ title: "C", timestamp: 3000 },
+				{ title: "B", timestamp: 2000 },
+			]);
+		});
+
+		it("returns top titles only", () => {
+			const recent = new RecentNotes({
+				C: 3000,
+				A: 1000,
+				B: 2000,
+			});
+			expect(recent.getTopTitles(2)).toEqual(["C", "B"]);
+		});
+
+		it("returns empty array when there are no entries", () => {
+			const recent = new RecentNotes();
+			expect(recent.getTop(3)).toEqual([]);
+			expect(recent.getTopTitles(3)).toEqual([]);
+		});
+	});
+
 	describe("boostRecent", () => {
 		it("moves recently used items to the front", () => {
 			const recent = new RecentNotes({
