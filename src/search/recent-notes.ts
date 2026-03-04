@@ -30,6 +30,24 @@ export class RecentNotes {
 	}
 
 	/**
+	 * Return the most recent note entries sorted by timestamp desc.
+	 * The result size is capped by `count`.
+	 */
+	getTop(count: number = MAX_BOOST_COUNT): Array<{ title: string; timestamp: number }> {
+		return [...this.entries.entries()]
+			.sort((a, b) => b[1] - a[1])
+			.slice(0, count)
+			.map(([title, timestamp]) => ({ title, timestamp }));
+	}
+
+	/**
+	 * Return only note titles for the most recent entries.
+	 */
+	getTopTitles(count: number = MAX_BOOST_COUNT): string[] {
+		return this.getTop(count).map((entry) => entry.title);
+	}
+
+	/**
 	 * Boost recently selected notes to the top of search results.
 	 *
 	 * From `results`, finds items whose title (extracted via `getTitle`) exists
@@ -59,15 +77,11 @@ export class RecentNotes {
 		}
 
 		// Sort by most recent first, take top `count`
-		recentInResults.sort((a, b) => b.timestamp - a.timestamp);
-		const boostedIndices = new Set(
-			recentInResults.slice(0, count).map((r) => r.index),
-		);
+		const topRecent = recentInResults.sort((a, b) => b.timestamp - a.timestamp).slice(0, count);
+		const boostedIndices = new Set(topRecent.map((r) => r.index));
 
 		// Build result: boosted first (sorted by recency), then rest in original order
-		const boosted = recentInResults
-			.slice(0, count)
-			.map((r) => results[r.index]!);
+		const boosted = topRecent.map((r) => results[r.index]!);
 		const rest = results.filter((_, i) => !boostedIndices.has(i));
 
 		return [...boosted, ...rest];

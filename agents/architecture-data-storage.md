@@ -35,12 +35,20 @@ Managed by `src/search/recent-notes.ts` via:
 - `app.saveLocalStorage("natural-link-recentNotes", data)`
 - These APIs are official in Obsidian since v1.8.7.
 
-`RecentNotes` keeps this map bounded (up to `MAX_RECENT_COUNT`) and exposes `boostRecent()` for result ordering.
+`RecentNotes` keeps this map bounded (up to `MAX_RECENT_COUNT`) and exposes top-N recent entries for ranking.
+
+Context ranking also reads non-persisted runtime signals:
+- open markdown leaves via `workspace.getLeavesOfType("markdown")`;
+- most recent leaf via `workspace.getMostRecentLeaf()`;
+- edit timestamps via `TFile.stat.mtime`.
+
+These runtime signals are not persisted by this plugin.
 
 ## Storage-related flow
 
 1. Plugin loads synced settings (`data.json`) at startup.
 2. UI selection events update recent-note timestamps in device-local storage.
 3. Search returns base ranking from `NotesIndex`.
-4. `RecentNotes.boostRecent()` reorders top results using local recency history.
-5. Setting toggles (for inline suggest and unresolved note behavior) immediately influence UI query handling.
+4. Context priority is computed from recent usage + file edit time + open leaves, but only for relevant candidates.
+5. The final context boost list is capped (up to 5 notes).
+6. Setting toggles (for inline suggest and unresolved note behavior) immediately influence UI query handling.

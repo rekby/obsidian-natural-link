@@ -33,11 +33,16 @@ For storage settings and recent-note persistence see `agents/architecture-data-s
 2. `notePart` is resolved via morphology-based search in `NotesIndex`.
 3. If heading mode (`#`): read headings from metadata cache and filter by prefix.
 4. If block mode (`^`): inspect all sections, show text previews, filter by text match and block-ID prefix, generate missing block IDs, and prepare `needsWrite` metadata.
-5. If query is empty: use recent notes as top suggestions.
-6. Build inserted link via `buildLink()`:
+5. Build contextual priority (used/edited/open) only within relevant candidates:
+   - For non-empty query: relevant set is `NotesIndex.search(...)` results.
+   - For empty query: relevant set is all collected notes.
+   - Fresh activity (5-minute window) is ranked above open notes; stale activity below.
+   - Notes that are both freshly edited and currently open are ranked first.
+6. If query is empty: return contextual top suggestions (up to 5).
+7. Build inserted link via `buildLink()`:
    - `Enter` inserts piped form `[[target|display]]`;
    - `Tab` inserts without explicit display (`[[target]]`).
-7. `Shift+Enter` inserts `buildRawLink()` output (`[[raw|raw]]`).
+8. `Shift+Enter` inserts `buildRawLink()` output (`[[raw|raw]]`).
 
 ## Modal flow
 
