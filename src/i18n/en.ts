@@ -22,7 +22,11 @@ export const en = {
 	"settings.search-non-existing-notes-description":
 		"Include notes that are referenced by links but do not exist yet in the vault",
 	"settings.inline-link-suggest":
-		"Replace native [[ link suggest (experimental)",
+		"Replace native [[ link suggest",
 	"settings.inline-link-suggest-description":
 		"Use the plugin's morphological search instead of the native autocomplete when typing [[",
+	"settings.swap-enter-and-tab":
+		"Swap enter and tab actions (experimental)",
+	"settings.swap-enter-and-tab-description":
+		"When enabled: enter inserts link without display text [[title]], tab inserts link with display text [[title|display]]",
 };

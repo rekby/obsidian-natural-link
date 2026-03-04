@@ -14,6 +14,7 @@ export class NaturalLinkModal extends SuggestModal<LinkSuggestion> {
 	private readonly core: LinkSuggestCore;
 	private readonly editor: Editor;
 	private readonly onNoteSelected: (title: string) => void;
+	private readonly swapEnterAndTab: boolean;
 	private lastQuery = "";
 	private readonly session = new SuggestSession();
 
@@ -22,13 +23,15 @@ export class NaturalLinkModal extends SuggestModal<LinkSuggestion> {
 		editor: Editor,
 		core: LinkSuggestCore,
 		onNoteSelected: (title: string) => void,
+		swapEnterAndTab = false,
 	) {
 		super(app);
 		this.core = core;
 		this.editor = editor;
 		this.onNoteSelected = onNoteSelected;
+		this.swapEnterAndTab = swapEnterAndTab;
 		this.setPlaceholder(t("modal.placeholder"));
-		this.setInstructions(LinkSuggestCore.getInstructions());
+		this.setInstructions(LinkSuggestCore.getInstructions(swapEnterAndTab));
 
 		this.scope.register(["Shift"], "Enter", () => {
 			this.insertRawLink();
@@ -61,7 +64,8 @@ export class NaturalLinkModal extends SuggestModal<LinkSuggestion> {
 	}
 
 	onChooseSuggestion(item: LinkSuggestion, evt: MouseEvent | KeyboardEvent): void {
-		const withoutDisplay = evt instanceof KeyboardEvent && evt.key === "Tab";
+		const isTab = evt instanceof KeyboardEvent && evt.key === "Tab";
+		const withoutDisplay = isTab !== this.swapEnterAndTab;
 		this.core.prepareBlockId(item);
 		const link = this.core.buildLink(item, this.lastQuery, false, withoutDisplay ? "" : undefined);
 		this.editor.replaceSelection(link);
@@ -80,6 +84,7 @@ export class NaturalLinkModal extends SuggestModal<LinkSuggestion> {
 	private insertLinkWithoutDisplay(): void {
 		const item = this.getSelectedSuggestion();
 		if (!item) return;
+		// Synthesize a Tab event; onChooseSuggestion will XOR with swapEnterAndTab
 		this.onChooseSuggestion(item, new KeyboardEvent("keydown", { key: "Tab" }));
 		this.close();
 	}

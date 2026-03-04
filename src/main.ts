@@ -100,6 +100,7 @@ export default class NaturalLinkPlugin extends Plugin {
 			editor,
 			core,
 			(title) => this.recordNoteSelection(title),
+			this.settings.swapEnterAndTab,
 		).open();
 	}
 

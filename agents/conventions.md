@@ -7,10 +7,11 @@
 - Keep one clear responsibility per file.
 - `Stemmer` interface is intentionally extensible (future `lemmatize?()` support).
 - All UI strings go through `t(key)` for localization.
-- Link insertion modes:
+- Link insertion modes (default, `swapEnterAndTab = false`):
   - `Enter`: piped format `[[Title|displayText]]` to preserve visible text on note rename;
   - `Tab`: no explicit display text `[[Title]]`;
   - `Shift+Enter`: raw-as-typed format `[[raw|raw]]`.
+- When `swapEnterAndTab` setting is enabled, Enter and Tab actions are swapped (Tab inserts with display, Enter inserts without). `Shift+Enter` is unaffected. The XOR logic lives in `onChooseSuggestion` / `selectSuggestion` and `insertLinkWithoutDisplay` still synthesizes a `Tab` key event.
 - Modal and inline suggest must delegate to `LinkSuggestCore` to avoid logic drift.
 
 ## i18n conventions
