@@ -33,6 +33,7 @@ Two storage layers are used:
 Managed by `src/search/recent-notes.ts` via:
 - `app.loadLocalStorage("natural-link-recentNotes")`
 - `app.saveLocalStorage("natural-link-recentNotes", data)`
+- These APIs are official in Obsidian since v1.8.7.
 
 `RecentNotes` keeps this map bounded (up to `MAX_RECENT_COUNT`) and exposes `boostRecent()` for result ordering.
 

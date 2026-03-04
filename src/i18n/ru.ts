@@ -14,6 +14,7 @@ export const ru: Partial<typeof en> = {
 	"modal.no-results": "Подходящих заметок не найдено",
 	"modal.instruction.navigate": "Навигация",
 	"modal.instruction.insert-link": "Вставить ссылку",
+	"modal.instruction.insert-without-display": "Вставить ссылку без отображаемого текста",
 	"modal.instruction.insert-as-typed": "Вставить ссылку как введено",
 	"modal.instruction.dismiss": "Закрыть",
 	"modal.note-not-created": "(ещё не создана)",

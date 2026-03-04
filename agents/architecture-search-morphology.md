@@ -7,7 +7,7 @@ For persistence details see `agents/architecture-data-storage.md`.
 ## Relevant modules
 
 - `src/types.ts` (`Stemmer`): `stem(word: string): string[]`
-- `src/stemming/russian-stemmer.ts`: Russian Snowball stemming with `ё -> е` normalization
+- `src/stemming/russian-stemmer.ts`: Russian Snowball stemming with `ё -> е` plus consonant alternation normalization (`г/д/з/ж`, `к/т/ц/ч`, `х/с/ш`, `ст/ск/щ`, `б/бл`, `п/пл`, `в/вл`, `м/мл`, `ф/фл`)
 - `src/stemming/english-stemmer.ts`: English Snowball stemming
 - `src/stemming/multi-stemmer.ts`: combines enabled stemmers and deduplicates stems
 - `src/search/tokenizer.ts`: word tokenization and lowercasing

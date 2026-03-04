@@ -11,12 +11,13 @@ An Obsidian plugin that lets you create links to notes using natural word forms.
 
 ## Features
 
-- **Morphological search**: Find notes by any word form. Searching for "wooden boxes" will match a note titled "Wooden box".
+- **Morphological search**: Find notes by any word form. Searching for "wooden boxes" will match a note titled "Wooden box". Russian consonant alternations are also normalized (for example, `друг`/`дружить`, `ходить`/`хожу`).
 - **Prefix matching**: Results update as you type. Even incomplete words match — typing "wood" will find "Wooden box".
 - **Alias support**: Searches across note titles and frontmatter aliases.
 - **Word order independence**: "box wooden" finds "Wooden box".
 - **Multi-language**: Russian and English search work simultaneously, with no dictionaries required.
 - **Heading and block links**: Use `#` to link to a specific heading (`note#heading`) or `^` to link to a block (`note^text`). The plugin searches for the note first, then shows matching headings or text blocks with previews. Use `|` to set explicit display text (`note|custom text`).
+- **Tab for IDE-style completion**: Press **Tab** to accept the selected suggestion and insert a link without display text (`[[Note]]`, `[[Note#Heading]]`, `[[Note#^blockId]]`).
 - **Insert link as typed**: Press **Shift+Enter** to insert a link with your exact input as both target and display text, bypassing search results.
 - **Preserved display text**: Links are always created as `[[Note Title|your input]]`, so your original text is preserved even if the note is renamed.
 - **Inline `[[` suggest** (opt-in): Replace Obsidian's native link autocomplete with the plugin's morphological search. Suggestions appear inline as you type `[[`, with hotkey hints shown at the bottom. Enable in Settings → Natural link → "Replace native [[ link suggest".
@@ -26,7 +27,9 @@ An Obsidian plugin that lets you create links to notes using natural word forms.
 
 1. Run the **Insert Natural link** command (or start typing `[[` if the inline suggest feature is enabled).
 2. Type the word or phrase you want to link.
-3. Select a matching note and press **Enter**. The plugin inserts a wikilink like `[[Matched Note|your typed text]]`.
+3. Select a matching note:
+   - **Enter** inserts `[[Matched Note|your typed text]]`.
+   - **Tab** inserts `[[Matched Note]]` (also works for `#` headings and `^` blocks).
 
 **Tip**: Press **Shift+Enter** at any time to insert a link using your exact input as-is.
 
