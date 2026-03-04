@@ -11,7 +11,7 @@ An Obsidian plugin that lets you create links to notes using natural word forms.
 
 ## Features
 
-- **Morphological search**: Find notes by any word form. Searching for "wooden boxes" will match a note titled "Wooden box".
+- **Morphological search**: Find notes by any word form. Searching for "wooden boxes" will match a note titled "Wooden box". Russian consonant alternations are also normalized (for example, `друг`/`дружить`, `ходить`/`хожу`).
 - **Prefix matching**: Results update as you type. Even incomplete words match — typing "wood" will find "Wooden box".
 - **Alias support**: Searches across note titles and frontmatter aliases.
 - **Word order independence**: "box wooden" finds "Wooden box".
@@ -32,6 +32,14 @@ An Obsidian plugin that lets you create links to notes using natural word forms.
    - **Tab** inserts `[[Matched Note]]` (also works for `#` headings and `^` blocks).
 
 **Tip**: Press **Shift+Enter** at any time to insert a link using your exact input as-is.
+
+**Command palette commands**:
+- **Insert natural link** (recommended hotkey: **Cmd/Ctrl+Shift+K**) — opens the natural link dialog.
+- **Toggle "replace native [[ suggest with natural"**
+- **Enable "replace native [[ suggest with natural"**
+- **Disable "replace native [[ suggest with natural"**
+
+The inline suggest commands let you control `[[` replacement without opening settings.
 
 ### Recommended hotkey
 

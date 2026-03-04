@@ -1,4 +1,4 @@
-import { Editor, MarkdownView, Plugin } from "obsidian";
+import { Editor, MarkdownView, Notice, Plugin } from "obsidian";
 import { DEFAULT_SETTINGS, NaturalLinkSettings, NaturalLinkSettingTab } from "./settings";
 import { NaturalLinkModal } from "./ui/natural-link-modal";
 import { NaturalLinkSuggest } from "./ui/natural-link-suggest";
@@ -23,6 +23,30 @@ export default class NaturalLinkPlugin extends Plugin {
 			name: t("command.natural-link"),
 			editorCallback: (editor: Editor, _view: MarkdownView) => {
 				this.openNaturalLinkModal(editor);
+			},
+		});
+
+		this.addCommand({
+			id: "toggle-inline-link-suggest",
+			name: t("command.toggle-inline-link-suggest"),
+			callback: async () => {
+				await this.setInlineLinkSuggest(!this.settings.inlineLinkSuggest);
+			},
+		});
+
+		this.addCommand({
+			id: "enable-inline-link-suggest",
+			name: t("command.enable-inline-link-suggest"),
+			callback: async () => {
+				await this.setInlineLinkSuggest(true);
+			},
+		});
+
+		this.addCommand({
+			id: "disable-inline-link-suggest",
+			name: t("command.disable-inline-link-suggest"),
+			callback: async () => {
+				await this.setInlineLinkSuggest(false);
 			},
 		});
 
@@ -144,6 +168,15 @@ export default class NaturalLinkPlugin extends Plugin {
 
 	async saveSettings() {
 		await this.saveData({ ...this.settings });
+	}
+
+	private async setInlineLinkSuggest(enabled: boolean): Promise<void> {
+		this.settings.inlineLinkSuggest = enabled;
+		await this.saveSettings();
+		const key = enabled
+			? "command.toggle-inline-link-suggest.enabled"
+			: "command.toggle-inline-link-suggest.disabled";
+		new Notice(t(key));
 	}
 
 	saveRecentNotes() {
