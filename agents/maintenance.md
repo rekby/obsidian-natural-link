@@ -34,7 +34,7 @@ npm run lint         # ESLint
 
 ## Known limitations
 
-- Snowball stemming does not handle consonant alternations (for example: `бег` / `бежать` have different stems). Full coverage requires lemmatization or semantic search.
+- Snowball stemming plus current normalization improves many alternations, but does not cover all Russian lexical alternations (for example: `бег` / `бежать`). Full coverage requires lemmatization or semantic search.
 - No fuzzy/typo tolerance yet.
 
 ## Future extensions (designed but not implemented)

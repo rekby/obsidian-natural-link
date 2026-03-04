@@ -32,9 +32,12 @@ For storage settings and recent-note persistence see `agents/architecture-data-s
 1. User input query is parsed by `parseQuery()` into `notePart` + optional sub-parts.
 2. `notePart` is resolved via morphology-based search in `NotesIndex`.
 3. If heading mode (`#`): read headings from metadata cache and filter by prefix.
-4. If block mode (`^`): inspect sections, generate missing block IDs, and prepare `needsWrite` metadata.
+4. If block mode (`^`): inspect all sections, show text previews, filter by text match and block-ID prefix, generate missing block IDs, and prepare `needsWrite` metadata.
 5. If query is empty: use recent notes as top suggestions.
-6. Build inserted link via `buildLink()` (`Enter`) or `buildRawLink()` (`Shift+Enter`).
+6. Build inserted link via `buildLink()`:
+   - `Enter` inserts piped form `[[target|display]]`;
+   - `Tab` inserts without explicit display (`[[target]]`).
+7. `Shift+Enter` inserts `buildRawLink()` output (`[[raw|raw]]`).
 
 ## Modal flow
 
@@ -46,7 +49,7 @@ For storage settings and recent-note persistence see `agents/architecture-data-s
 ## Inline suggest flow (`[[`)
 
 1. Typing `[[` triggers `NaturalLinkSuggest.onTrigger()`.
-2. Plugin suggest is prioritized over native suggest while enabled.
+2. Plugin suggest is prioritized over native suggest while enabled. When inline suggest is disabled, `onTrigger()` returns `null` and native suggest takes over.
 3. Each suggestion call builds fresh `LinkSuggestCore` to reflect current vault state.
 4. Selection replaces the `[[...]]` range and writes generated block IDs when needed.
 5. Instruction bar shows hotkey hints (including `Shift+Enter` behavior).

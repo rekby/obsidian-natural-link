@@ -111,6 +111,11 @@ describe("LinkSuggestCore.buildLink (explicitDisplay parameter)", () => {
 		expect(core.buildLink(item, "note#", false, "")).toBe("[[My Note#Intro]]");
 	});
 
+	it("omits display for block links when explicitDisplay is empty", () => {
+		const item: LinkSuggestion = { type: "block", note, blockId: "abc123", blockText: "txt" };
+		expect(core.buildLink(item, "note^abc", false, "")).toBe("[[My Note#^abc123]]");
+	});
+
 	it("explicitDisplay overrides query-derived display", () => {
 		const item: LinkSuggestion = { type: "note", note };
 		expect(core.buildLink(item, "typed text", false, "original")).toBe("[[My Note|original]]");

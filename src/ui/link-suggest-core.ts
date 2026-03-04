@@ -167,6 +167,7 @@ export class LinkSuggestCore {
 		return [
 			{ command: "↑↓", purpose: t("modal.instruction.navigate") },
 			{ command: "↵", purpose: t("modal.instruction.insert-link") },
+			{ command: "tab", purpose: t("modal.instruction.insert-without-display") },
 			{ command: "shift ↵", purpose: t("modal.instruction.insert-as-typed") },
 			{ command: "esc", purpose: t("modal.instruction.dismiss") },
 		];

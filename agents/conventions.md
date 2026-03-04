@@ -7,7 +7,10 @@
 - Keep one clear responsibility per file.
 - `Stemmer` interface is intentionally extensible (future `lemmatize?()` support).
 - All UI strings go through `t(key)` for localization.
-- Links are always built in piped format: `[[Title|displayText]]` to preserve visible text on note rename.
+- Link insertion modes:
+  - `Enter`: piped format `[[Title|displayText]]` to preserve visible text on note rename;
+  - `Tab`: no explicit display text `[[Title]]`;
+  - `Shift+Enter`: raw-as-typed format `[[raw|raw]]`.
 - Modal and inline suggest must delegate to `LinkSuggestCore` to avoid logic drift.
 
 ## i18n conventions

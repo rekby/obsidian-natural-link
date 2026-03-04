@@ -5,6 +5,13 @@ This file is a short module map. Detailed behavior lives in:
 - `agents/architecture-ui-flow.md`
 - `agents/architecture-data-storage.md`
 
+## Project basics
+
+- **Name**: Natural link (`obsidian-natural-link`)
+- **Purpose**: create links by natural word forms (declensions, word order, incomplete input).
+- **Entry point**: `src/main.ts` (compiled to `main.js` and loaded by Obsidian).
+- **Release artifacts**: `main.js`, `manifest.json`, optional `styles.css`.
+
 ## Module map and responsibilities
 
 - **Plugin entry and wiring**
