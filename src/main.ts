@@ -1,4 +1,4 @@
-import { Editor, MarkdownView, Notice, Plugin } from "obsidian";
+import { Editor, MarkdownView, Notice, Plugin, TFile } from "obsidian";
 import { DEFAULT_SETTINGS, NaturalLinkSettings, NaturalLinkSettingTab } from "./settings";
 import { NaturalLinkModal } from "./ui/natural-link-modal";
 import { NaturalLinkSuggest } from "./ui/natural-link-suggest";
@@ -8,6 +8,7 @@ import { RecentNotes } from "./search/recent-notes";
 import { MultiStemmer } from "./stemming/multi-stemmer";
 import { RussianStemmer } from "./stemming/russian-stemmer";
 import { EnglishStemmer } from "./stemming/english-stemmer";
+import { addLinkDisplayAliases, LinkDisplay } from "./search/link-aliases";
 import { NoteInfo } from "./types";
 import { t } from "./i18n";
 
@@ -126,10 +127,31 @@ export default class NaturalLinkPlugin extends Plugin {
 			return { path: file.path, title: file.basename, aliases };
 		});
 
+		addLinkDisplayAliases(notes, this.collectLinkDisplayTexts(files));
+
 		if (this.settings.searchNonExistingNotes) {
 			notes.push(...this.collectUnresolvedNotes(notes));
 		}
 		return notes;
+	}
+
+	private collectLinkDisplayTexts(files: TFile[]): LinkDisplay[] {
+		const result: LinkDisplay[] = [];
+		for (const file of files) {
+			const cache = this.app.metadataCache.getFileCache(file);
+			if (!cache?.links) continue;
+			for (const link of cache.links) {
+				if (!link.original.includes("|") || !link.displayText) continue;
+				const target = this.app.metadataCache.getFirstLinkpathDest(
+					link.link,
+					file.path,
+				);
+				if (target) {
+					result.push({ notePath: target.path, displayText: link.displayText });
+				}
+			}
+		}
+		return result;
 	}
 
 	private collectUnresolvedNotes(existingNotes: NoteInfo[]): NoteInfo[] {

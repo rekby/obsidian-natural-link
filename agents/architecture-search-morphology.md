@@ -13,6 +13,7 @@ For persistence details see `agents/architecture-data-storage.md`.
 - `src/search/tokenizer.ts`: word tokenization and lowercasing
 - `src/search/notes-index.ts`: index construction and query search
 - `src/search/recent-notes.ts`: recency boost source used after search
+- `src/search/link-aliases.ts`: enriches `NoteInfo.aliases` with displayTexts from wikilinks
 
 ## Search pipeline
 
@@ -28,6 +29,10 @@ For persistence details see `agents/architecture-data-storage.md`.
    - query match ratio (`0.5`)
    - source specificity (`0.4`)
    - title bonus (`0.1`)
+
+## Link displayText as aliases
+
+Before `NotesIndex` is built, `collectNotes()` in `src/main.ts` calls `collectLinkDisplayTexts()` to scan all wikilinks in the vault and collect explicitly-set display texts (links that contain `|`, e.g. `[[Note|display]]`). These are passed to `addLinkDisplayAliases()` (`src/search/link-aliases.ts`) which appends each unique displayText to the target note's `aliases` array, skipping values that duplicate the note title or an existing alias. Auto-generated display texts (e.g. `"Note > Heading"` for `[[Note#Heading]]`) are excluded because their `original` field does not contain `|`.
 
 ## NotesIndex role
 
