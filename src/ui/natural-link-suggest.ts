@@ -27,6 +27,7 @@ import { SuggestSession } from "./suggest-session";
 export class NaturalLinkSuggest extends EditorSuggest<LinkSuggestion> {
 	private readonly plugin: NaturalLinkPlugin;
 	private readonly session = new SuggestSession();
+	private activeCore: LinkSuggestCore | null = null;
 
 	constructor(plugin: NaturalLinkPlugin) {
 		super(plugin.app);
@@ -69,6 +70,7 @@ export class NaturalLinkSuggest extends EditorSuggest<LinkSuggestion> {
 
 	async getSuggestions(context: EditorSuggestContext): Promise<LinkSuggestion[]> {
 		const core = this.buildCore();
+		this.activeCore = core;
 		const parsed = parseQuery(context.query);
 		const hasSubLink = parsed.headingPart !== undefined || parsed.blockPart !== undefined;
 
@@ -83,7 +85,7 @@ export class NaturalLinkSuggest extends EditorSuggest<LinkSuggestion> {
 	}
 
 	renderSuggestion(item: LinkSuggestion, el: HTMLElement): void {
-		const core = this.buildCore();
+		const core = this.activeCore ?? this.buildCore();
 		core.renderSuggestion(item, el);
 	}
 
@@ -91,7 +93,7 @@ export class NaturalLinkSuggest extends EditorSuggest<LinkSuggestion> {
 		const ctx = this.context;
 		if (!ctx) return;
 
-		const core = this.buildCore();
+		const core = this.activeCore ?? this.buildCore();
 		const asTyped = evt instanceof KeyboardEvent && evt.shiftKey;
 		const isTab = evt instanceof KeyboardEvent && evt.key === "Tab";
 		const withoutDisplay = isTab !== this.plugin.settings.swapEnterAndTab;
@@ -110,6 +112,7 @@ export class NaturalLinkSuggest extends EditorSuggest<LinkSuggestion> {
 			this.plugin.recordNoteSelection(core.getNoteTitle(item));
 			void core.writeBlockIdIfNeeded(item);
 		}
+		this.activeCore = null;
 	}
 
 	// ----- Private -----
