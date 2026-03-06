@@ -73,9 +73,6 @@ export class NaturalLinkSuggest extends EditorSuggest<SearchResult> {
 		}
 
 		const notes = this.plugin.collectNotes();
-		if (this.plugin.settings.searchNonExistingNotes) {
-			notes.push(...this.plugin.collectUnresolvedNotes(notes));
-		}
 		const stemmer = new MultiStemmer([new RussianStemmer(), new EnglishStemmer()]);
 		const index = new NotesIndex(notes, stemmer);
 		const results = index.search(query);

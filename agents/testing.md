@@ -32,6 +32,7 @@ tests/
 ```bash
 npm test             # Run tests once (vitest run)
 npm run test:watch   # Watch mode tests
+npx tsc --noEmit     # Explicit type check
 npm run lint         # Run lint checks
 npm run build        # Build plugin bundle
 ```
@@ -52,7 +53,8 @@ npm run build        # Build plugin bundle
 - Changed logic is covered by automated tests in corresponding `tests/**`.
 - Existing related tests still pass.
 - No duplicate assertions that restate implementation details without behavior value.
-- Before marking work complete, run post-change verification:
+- Before marking work complete, run post-change verification with the same commands as CI/release pipeline:
+  - `npx tsc --noEmit`
+  - `npm run build`
   - `npm test`
   - `npm run lint`
-  - `npm run build`
