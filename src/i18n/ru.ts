@@ -20,6 +20,9 @@ export const ru: Partial<typeof en> = {
 	"modal.note-not-created": "(ещё не создана)",
 	"suggest.heading-badge": "заголовок",
 	"suggest.block-badge": "блок",
+	"suggest.boost-reason.used": "(исп.)",
+	"suggest.boost-reason.edited": "(ред.)",
+	"suggest.boost-reason.open": "(откр.)",
 	"settings.title": "Natural link",
 	"settings.hotkey-button": "Назначить горячую клавишу",
 	"settings.hotkey-description": "Назначьте горячую клавишу для быстрой вставки естественных ссылок",
@@ -34,4 +37,8 @@ export const ru: Partial<typeof en> = {
 		"Поменять местами Enter и Tab (экспериментально)",
 	"settings.swap-enter-and-tab-description":
 		"Если включено: Enter вставляет ссылку без отображаемого текста [[Заголовок]], Tab вставляет ссылку с отображаемым текстом [[Заголовок|текст]]",
+	"settings.show-boost-reason-hint":
+		"Показывать причину контекстного буста",
+	"settings.show-boost-reason-hint-description":
+		"Показывать маленькую серую подсказку в списке, почему заметка получила контекстный буст",
 };

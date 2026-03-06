@@ -93,6 +93,7 @@ export default class NaturalLinkPlugin extends Plugin {
 			collectNotes: () => this.collectNotes(),
 			stemmer,
 			recentNotes: this.recentNotes,
+			showBoostReasonHint: this.settings.showBoostReasonHint,
 			prebuiltIndex: index,
 		});
 

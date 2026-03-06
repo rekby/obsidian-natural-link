@@ -11,6 +11,8 @@ export interface NaturalLinkSettings {
 	inlineLinkSuggest: boolean;
 	/** Whether to swap Enter (insert with display) and Tab (insert without display) key actions */
 	swapEnterAndTab: boolean;
+	/** Show small reason hint for context-boosted note suggestions */
+	showBoostReasonHint: boolean;
 }
 
 export const DEFAULT_SETTINGS: NaturalLinkSettings = {
@@ -18,6 +20,7 @@ export const DEFAULT_SETTINGS: NaturalLinkSettings = {
 	searchNonExistingNotes: true,
 	inlineLinkSuggest: false,
 	swapEnterAndTab: false,
+	showBoostReasonHint: false,
 };
 
 export class NaturalLinkSettingTab extends PluginSettingTab {
@@ -64,6 +67,18 @@ export class NaturalLinkSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.swapEnterAndTab)
 					.onChange(async (value) => {
 						this.plugin.settings.swapEnterAndTab = value;
+						await this.plugin.saveSettings();
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName(t("settings.show-boost-reason-hint"))
+			.setDesc(t("settings.show-boost-reason-hint-description"))
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.showBoostReasonHint)
+					.onChange(async (value) => {
+						this.plugin.settings.showBoostReasonHint = value;
 						await this.plugin.saveSettings();
 					}),
 			);

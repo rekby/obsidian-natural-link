@@ -17,3 +17,9 @@
 .natural-link-block-text {
 	white-space: pre-wrap;
 }
+
+.natural-link-boost-reason {
+	display: block;
+	font-size: var(--font-smallest);
+	color: var(--text-faint);
+}

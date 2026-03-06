@@ -32,6 +32,8 @@ tests/
 ```bash
 npm test             # Run tests once (vitest run)
 npm run test:watch   # Watch mode tests
+npm run lint         # Run lint checks
+npm run build        # Build plugin bundle
 ```
 
 ## TDD and change expectations
@@ -50,3 +52,7 @@ npm run test:watch   # Watch mode tests
 - Changed logic is covered by automated tests in corresponding `tests/**`.
 - Existing related tests still pass.
 - No duplicate assertions that restate implementation details without behavior value.
+- Before marking work complete, run post-change verification:
+  - `npm test`
+  - `npm run lint`
+  - `npm run build`

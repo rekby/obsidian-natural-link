@@ -15,6 +15,9 @@ export const en = {
 	"modal.note-not-created": "(not yet created)",
 	"suggest.heading-badge": "Heading",
 	"suggest.block-badge": "Block",
+	"suggest.boost-reason.used": "(used)",
+	"suggest.boost-reason.edited": "(edited)",
+	"suggest.boost-reason.open": "(open)",
 	"settings.title": "Natural link",
 	"settings.hotkey-button": "Set hotkey",
 	"settings.hotkey-description": "Assign a keyboard shortcut to quickly insert natural links",
@@ -29,4 +32,8 @@ export const en = {
 		"Swap enter and tab actions (experimental)",
 	"settings.swap-enter-and-tab-description":
 		"When enabled: enter inserts link without display text [[title]], tab inserts link with display text [[title|display]]",
+	"settings.show-boost-reason-hint":
+		"Show context boost reason hint",
+	"settings.show-boost-reason-hint-description":
+		"Show a small gray hint in suggestions explaining why a note received context boost",
 };

@@ -251,10 +251,10 @@ describe("LinkSuggestCore contextual priority boosting", () => {
 
 		expect(titles.slice(0, 5)).toEqual([
 			"Rel B",
-			"Rel C",
-			"Rel A",
 			"Rel E",
 			"Rel D",
+			"Rel C",
+			"Rel A",
 		]);
 	});
 
@@ -332,8 +332,111 @@ describe("LinkSuggestCore contextual priority boosting", () => {
 			.filter((s): s is Extract<LinkSuggestion, { type: "note" }> => s.type === "note")
 			.map((s) => s.note.title);
 
-		expect(titles).toEqual(["Rel B", "Rel C", "Rel A", "Rel E", "Rel D"]);
+		expect(titles).toEqual(["Rel B", "Rel E", "Rel D", "Rel C", "Rel A"]);
 		expect(titles).toHaveLength(5);
+	});
+
+	it("ignores edited boost for notes older than 14 days", async () => {
+		const now = Date.now();
+		const old = 15 * 24 * 60 * 60 * 1000;
+		const notes = [
+			makeNote("Old Edit", "Old Edit.md"),
+			makeNote("Recent Edit", "Recent Edit.md"),
+		];
+		const app = makePriorityApp(
+			[],
+			{
+				"Old Edit.md": now - old,
+				"Recent Edit.md": now - 60_000,
+			},
+		);
+
+		const core = new LinkSuggestCore({
+			app: app as never,
+			collectNotes: () => notes,
+			stemmer: { stem: (w: string) => [w.toLowerCase()] },
+			recentNotes: new RecentNotes(),
+		});
+
+		const suggestions = await core.getSuggestions("");
+		const titles = suggestions
+			.filter((s): s is Extract<LinkSuggestion, { type: "note" }> => s.type === "note")
+			.map((s) => s.note.title);
+
+		expect(titles).toEqual(["Recent Edit"]);
+	});
+
+	it("uses the freshest timestamp when note appears in multiple boost sources", async () => {
+		const now = Date.now();
+		const notes = [
+			makeNote("Multi", "Multi.md"),
+			makeNote("Other", "Other.md"),
+		];
+		const app = makePriorityApp(
+			["Multi"],
+			{
+				"Multi.md": now - 60_000,
+				"Other.md": now - 10_000,
+			},
+		);
+		const recent = new RecentNotes({
+			Multi: now - 30_000,
+		});
+
+		const core = new LinkSuggestCore({
+			app: app as never,
+			collectNotes: () => notes,
+			stemmer: { stem: (w: string) => [w.toLowerCase()] },
+			recentNotes: recent,
+		});
+
+		const suggestions = await core.getSuggestions("");
+		const titles = suggestions
+			.filter((s): s is Extract<LinkSuggestion, { type: "note" }> => s.type === "note")
+			.map((s) => s.note.title);
+
+		expect(titles[0]).toBe("Multi");
+	});
+
+	it("renders boost reason hint when enabled", async () => {
+		const now = Date.now();
+		const notes = [
+			makeNote("Used Note", "Used Note.md"),
+		];
+		const app = makePriorityApp(
+			[],
+			{
+				"Used Note.md": now - 60_000,
+			},
+		);
+		const recent = new RecentNotes({
+			"Used Note": now - 10_000,
+		});
+
+		const core = new LinkSuggestCore({
+			app: app as never,
+			collectNotes: () => notes,
+			stemmer: { stem: (w: string) => [w.toLowerCase()] },
+			recentNotes: recent,
+			showBoostReasonHint: true,
+		});
+
+		const suggestions = await core.getSuggestions("used");
+		const noteSuggestion = suggestions.find((s): s is Extract<LinkSuggestion, { type: "note" }> => s.type === "note");
+		expect(noteSuggestion).toBeDefined();
+
+		const rendered: Array<{ tag: string; text?: string; cls?: string }> = [];
+		const el = {
+			createEl: (tag: string, opts?: { text?: string; cls?: string }) => {
+				rendered.push({ tag, text: opts?.text, cls: opts?.cls });
+				return el;
+			},
+		} as unknown as HTMLElement;
+
+		core.renderSuggestion(noteSuggestion!, el);
+		const hint = rendered.find((entry) => entry.cls === "suggestion-note natural-link-boost-reason");
+
+		expect(hint?.text).toBe("(used)");
 	});
 });
 // ----- Block suggestions: list items -----

@@ -2,7 +2,8 @@ import { App, Instruction, TFile } from "obsidian";
 import { NotesIndex } from "../search/notes-index";
 import { RecentNotes } from "../search/recent-notes";
 import {
-	buildContextPriorityTitles,
+	buildContextPriorityEntries,
+	BoostReason,
 	reorderByPriority,
 } from "../search/context-priority";
 import { NoteInfo, Stemmer, LinkSuggestion } from "../types";
@@ -30,6 +31,8 @@ export class LinkSuggestCore {
 	private readonly collectNotes: () => NoteInfo[];
 	private readonly stemmer: Stemmer;
 	private readonly recentNotes: RecentNotes;
+	private readonly showBoostReasonHint: boolean;
+	private boostReasonByTitle = new Map<string, BoostReason>();
 
 	/**
 	 * Optional pre-built index (used by the modal which builds once on open).
@@ -43,12 +46,14 @@ export class LinkSuggestCore {
 		collectNotes: () => NoteInfo[];
 		stemmer: Stemmer;
 		recentNotes: RecentNotes;
+		showBoostReasonHint?: boolean;
 		prebuiltIndex?: NotesIndex;
 	}) {
 		this.app = opts.app;
 		this.collectNotes = opts.collectNotes;
 		this.stemmer = opts.stemmer;
 		this.recentNotes = opts.recentNotes;
+		this.showBoostReasonHint = opts.showBoostReasonHint ?? false;
 		this.cachedIndex = opts.prebuiltIndex ?? null;
 	}
 
@@ -199,11 +204,15 @@ export class LinkSuggestCore {
 			note: r.note,
 			matchedAlias: r.matchedAlias,
 		}));
-		const priorityTitles = buildContextPriorityTitles({
+		const priorityEntries = buildContextPriorityEntries({
 			app: this.app,
 			recentNotes: this.recentNotes,
 			relevantCandidates: results.map((r) => r.note),
 		});
+		this.boostReasonByTitle = new Map(
+			priorityEntries.map((entry) => [entry.title, entry.reason]),
+		);
+		const priorityTitles = priorityEntries.map((entry) => entry.title);
 		return reorderByPriority(suggestions, (s) => s.note.title, priorityTitles);
 	}
 
@@ -397,11 +406,15 @@ export class LinkSuggestCore {
 
 	private getRecentSuggestions(): LinkSuggestion[] {
 		const notes = this.collectNotes();
-		const priorityTitles = buildContextPriorityTitles({
+		const priorityEntries = buildContextPriorityEntries({
 			app: this.app,
 			recentNotes: this.recentNotes,
 			relevantCandidates: notes,
 		});
+		this.boostReasonByTitle = new Map(
+			priorityEntries.map((entry) => [entry.title, entry.reason]),
+		);
+		const priorityTitles = priorityEntries.map((entry) => entry.title);
 
 		const notesByTitle = new Map(notes.map((n) => [n.title, n]));
 		const suggestions: LinkSuggestion[] = [];
@@ -434,6 +447,15 @@ export class LinkSuggestCore {
 			});
 		} else if (item.note.path !== `${item.note.title}.md`) {
 			el.createEl("small", { text: item.note.path, cls: "suggestion-path" });
+		}
+		if (this.showBoostReasonHint) {
+			const reason = this.boostReasonByTitle.get(item.note.title);
+			if (reason) {
+				el.createEl("small", {
+					text: this.getBoostReasonLabel(reason),
+					cls: "suggestion-note natural-link-boost-reason",
+				});
+			}
 		}
 	}
 
@@ -503,5 +525,16 @@ export class LinkSuggestCore {
 		// Display = the note part the user typed (before any #, ^, |).
 		// When empty (e.g. bare "#heading" or "^"), no display text is shown.
 		return parsed.notePart.trim();
+	}
+
+	private getBoostReasonLabel(reason: BoostReason): string {
+		switch (reason) {
+			case "used":
+				return t("suggest.boost-reason.used");
+			case "edited":
+				return t("suggest.boost-reason.edited");
+			case "open":
+				return t("suggest.boost-reason.open");
+		}
 	}
 }

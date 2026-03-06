@@ -120,6 +120,7 @@ export class NaturalLinkSuggest extends EditorSuggest<LinkSuggestion> {
 			collectNotes: () => this.plugin.collectNotes(),
 			stemmer: new MultiStemmer([new RussianStemmer(), new EnglishStemmer()]),
 			recentNotes: this.plugin.recentNotes,
+			showBoostReasonHint: this.plugin.settings.showBoostReasonHint,
 		});
 	}
 
