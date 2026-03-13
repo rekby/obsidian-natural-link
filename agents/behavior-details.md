@@ -19,6 +19,8 @@ If the reason behind a decision is unclear from the code, ask the user to explai
 - **Three inline suggest commands (toggle / enable / disable)**: enable and disable exist so the user can bind hotkeys to a target state and press them without needing to know the current state. Toggle alone requires awareness of current state.
 - **`searchNonExistingNotes` defaults to `true`**: repeats standard Obsidian behavior where unresolved links appear in search.
 - **Empty query shows recent notes**: provides quick access to recently used notes when opening the modal or typing `[[` without a query.
+- **README demos use separate localized vaults**: documentation capture runs against dedicated English and Russian vaults so README media stays deterministic and does not depend on smoke-test fixtures.
+- **README GIFs are rendered from element screenshots, not desktop capture**: WebdriverIO captures the Obsidian app container frame-by-frame and `ffmpeg` assembles the GIFs. This keeps output deterministic and avoids recording unrelated desktop UI.
 
 ## Cross-cutting behaviors
 

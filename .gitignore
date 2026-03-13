@@ -17,6 +17,8 @@ main.js
 
 # obsidian
 data.json
+.obsidian-cache
+obsidian-tests/demo-artifacts
 
 # Exclude macOS Finder (System Explorer) View States
 .DS_Store

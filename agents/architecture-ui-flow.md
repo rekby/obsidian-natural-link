@@ -40,8 +40,8 @@ For storage settings and recent-note persistence see `agents/architecture-data-s
    - Notes that are both freshly edited and currently open are ranked first.
 6. If query is empty: return contextual top suggestions (up to 5).
 7. Build inserted link via `buildLink()`:
-   - `Enter` inserts piped form `[[target|display]]`;
-   - `Tab` inserts without explicit display (`[[target]]`).
+   - `Enter` inserts without explicit display (`[[target]]`);
+   - `Tab` inserts piped form `[[target|display]]`.
 8. `Shift+Enter` inserts `buildRawLink()` output (`[[raw|raw]]`).
 
 ## Modal flow

@@ -5,6 +5,8 @@
 - **Framework**: Vitest
 - **Mocking strategy**: Obsidian API is mocked via `tests/__mocks__/obsidian.ts` and aliasing from `vitest.config.ts`
 - **Focus**: Business logic (stemming, tokenization, search, query parsing, link building) should stay independently testable from Obsidian runtime
+- **UI E2E**: `npm run obsidian-tests` runs real desktop Obsidian with WebdriverIO + `wdio-obsidian-service` against `obsidian-tests/vault/`
+- **Demo E2E**: `npm run demo:capture` runs a separate real-Obsidian suite against `obsidian-tests/demo-vaults/{en,ru}` and records README frames/manifests
 
 ## Test organization
 
@@ -32,6 +34,9 @@ tests/
 ```bash
 npm test             # Run tests once (vitest run)
 npm run test:watch   # Watch mode tests
+npm run obsidian-tests # Build plugin and run real Obsidian UI tests
+npm run demo:capture # Build plugin and capture README demo frames
+npm run demo:render  # Render GIFs from captured demo manifests
 npx tsc --noEmit     # Explicit type check
 npm run lint         # Run lint checks
 npm run build        # Build plugin bundle
@@ -47,6 +52,7 @@ npm run build        # Build plugin bundle
   - Block ID generation/write flow
   - Recent note boosting and ordering
 - Keep tests close to feature area and avoid broad integration tests when a narrow unit test is enough.
+- Keep README demo capture isolated from smoke E2E so documentation media does not slow down ordinary verification.
 
 ## Done criteria for test quality
 
@@ -58,3 +64,4 @@ npm run build        # Build plugin bundle
   - `npm run build`
   - `npm test`
   - `npm run lint`
+- Re-render README GIFs with `npm run demo` whenever demo scenario content or asset paths change.

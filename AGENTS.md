@@ -12,4 +12,5 @@ Task-oriented guidance lives in `agents/*.md`.
 - [`agents/testing.md`](agents/testing.md) - testing stack, test organization, and test quality expectations.
 - [`agents/conventions.md`](agents/conventions.md) - coding conventions, i18n conventions, and core invariants.
 - [`agents/behavior-details.md`](agents/behavior-details.md) - design rationale and cross-cutting behaviors not covered in user docs.
+- [`agents/demo-workflow.md`](agents/demo-workflow.md) - localized demo vaults, README gif capture flow, and regeneration commands.
 - [`agents/maintenance.md`](agents/maintenance.md) - tooling commands, documentation policy, limitations, and future extensions.

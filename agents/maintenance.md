@@ -16,6 +16,10 @@ npm run dev          # Watch mode (esbuild)
 npm run build        # Type check (tsc) + production build (esbuild)
 npm test             # Run tests (vitest run)
 npm run test:watch   # Watch mode tests (vitest)
+npm run obsidian-tests # Build plugin and run real Obsidian UI tests
+npm run demo:capture # Capture localized README demo frames in Obsidian
+npm run demo:render  # Render demo GIFs via ffmpeg
+npm run demo         # Full demo regeneration pipeline
 npm run lint         # ESLint
 ```
 
@@ -26,7 +30,14 @@ npm run lint         # ESLint
 - `README.md` is end-user documentation (English).
 - `README.ru.md` is Russian translation and should stay in sync with `README.md`.
 - `AGENTS.md` + `agents/*.md` are agent-facing docs and should stay precise and navigable.
+- `docs/demo/en/*.gif` and `docs/demo/ru/*.gif` are committed documentation assets and should be regenerated, not hand-edited.
 - `agents/behavior-details.md` must be updated when design decisions are made or changed. If a rationale is unclear, ask the user.
+
+## Demo media maintenance
+
+- Raw demo frames/manifests under `obsidian-tests/demo-artifacts/` are temporary and must stay ignored.
+- The demo render step requires `ffmpeg`. The render script should fail loudly when it is missing or misconfigured.
+- Keep demo vaults in `obsidian-tests/demo-vaults/` readable and intentionally curated; they are documentation fixtures, not arbitrary test debris.
 
 ## Security and dependency checks
 

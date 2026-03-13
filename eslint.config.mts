@@ -40,5 +40,6 @@ export default tseslint.config(
 		"versions.json",
 		"main.js",
 		"vitest.config.ts",
+		"obsidian-tests/demo-artifacts",
 	]),
 );

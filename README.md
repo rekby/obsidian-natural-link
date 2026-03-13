@@ -17,7 +17,7 @@ An Obsidian plugin that lets you create links to notes using natural word forms.
 - **Word order independence**: "box wooden" finds "Wooden box".
 - **Multi-language**: Russian and English search work simultaneously, with no dictionaries required.
 - **Heading and block links**: Use `#` to link to a specific heading (`note#heading`) or `^` to link to a block (`note^text`). The plugin searches for the note first, then shows matching headings or text blocks with previews. Use `|` to set explicit display text (`note|custom text`).
-- **Tab for IDE-style completion**: Press **Tab** to accept the selected suggestion and insert a link without display text (`[[Note]]`, `[[Note#Heading]]`, `[[Note#^blockId]]`).
+- **Tab for display-preserving completion**: Press **Tab** to accept the selected suggestion and insert a link with your typed text preserved (`[[Note|your text]]`, `[[Note#Heading|your text]]`, `[[Note#^blockId|your text]]`).
 - **Insert link as typed**: Press **Shift+Enter** to insert a link with your exact input as both target and display text, bypassing search results.
 - **Preserved display text**: Links are always created as `[[Note Title|your input]]`, so your original text is preserved even if the note is renamed.
 - **Inline `[[` suggest** (opt-in): Replace Obsidian's native link autocomplete with the plugin's morphological search. Suggestions appear inline as you type `[[`, with hotkey hints shown at the bottom. Enable in Settings → Natural link → "Replace native [[ link suggest".
@@ -28,8 +28,8 @@ An Obsidian plugin that lets you create links to notes using natural word forms.
 1. Run the **Insert Natural link** command (or start typing `[[` if the inline suggest feature is enabled).
 2. Type the word or phrase you want to link.
 3. Select a matching note:
-   - **Enter** inserts `[[Matched Note|your typed text]]`.
-   - **Tab** inserts `[[Matched Note]]` (also works for `#` headings and `^` blocks).
+   - **Enter** inserts `[[Matched Note]]`.
+   - **Tab** inserts `[[Matched Note|your typed text]]` (also works for `#` headings and `^` blocks).
 
 **Tip**: Press **Shift+Enter** at any time to insert a link using your exact input as-is.
 
@@ -40,6 +40,18 @@ An Obsidian plugin that lets you create links to notes using natural word forms.
 - **Disable "replace native [[ suggest with natural"**
 
 The inline suggest commands let you control `[[` replacement without opening settings.
+
+## Demo
+
+**English demos**
+
+![Modal search demo](docs/demo/en/modal-search.gif)
+
+![Inline suggest demo](docs/demo/en/inline-link.gif)
+
+![Heading link demo](docs/demo/en/heading-link.gif)
+
+![Block link demo](docs/demo/en/block-link.gif)
 
 ### Recommended hotkey
 
@@ -96,6 +108,10 @@ npm run dev          # Watch mode
 npm run build        # Type check + production build
 npm test             # Run tests
 npm run test:watch   # Watch mode tests
+npm run obsidian-tests # Build plugin and run real Obsidian UI tests
+npm run demo:capture # Capture localized demo frames in real Obsidian
+npm run demo:render  # Render demo GIFs from captured frames via ffmpeg
+npm run demo         # Capture + render all README demo GIFs
 npm run lint         # Lint
 ```
 
