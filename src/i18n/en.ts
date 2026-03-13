@@ -29,9 +29,9 @@ export const en = {
 	"settings.inline-link-suggest-description":
 		"Use the plugin's morphological search instead of the native autocomplete when typing [[",
 	"settings.swap-enter-and-tab":
-		"Swap enter and tab actions (experimental)",
+		"Swap enter and tab actions",
 	"settings.swap-enter-and-tab-description":
-		"When enabled: enter inserts link without display text [[title]], tab inserts link with display text [[title|display]]",
+		"When enabled: enter inserts link with display text [[title|display]], tab inserts link without display text [[title]]",
 	"settings.show-boost-reason-hint":
 		"Show context boost reason hint",
 	"settings.show-boost-reason-hint-description":

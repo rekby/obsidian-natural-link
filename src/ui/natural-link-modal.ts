@@ -38,7 +38,7 @@ export class NaturalLinkModal extends SuggestModal<LinkSuggestion> {
 			return false;
 		});
 		this.scope.register([], "Tab", () => {
-			this.insertLinkWithoutDisplay();
+			this.insertLinkViaTab();
 			return false;
 		});
 	}
@@ -65,7 +65,7 @@ export class NaturalLinkModal extends SuggestModal<LinkSuggestion> {
 
 	onChooseSuggestion(item: LinkSuggestion, evt: MouseEvent | KeyboardEvent): void {
 		const isTab = evt instanceof KeyboardEvent && evt.key === "Tab";
-		const withoutDisplay = isTab !== this.swapEnterAndTab;
+		const withoutDisplay = isTab === this.swapEnterAndTab;
 		this.core.prepareBlockId(item);
 		const link = this.core.buildLink(item, this.lastQuery, false, withoutDisplay ? "" : undefined);
 		this.editor.replaceSelection(link);
@@ -81,10 +81,9 @@ export class NaturalLinkModal extends SuggestModal<LinkSuggestion> {
 		this.close();
 	}
 
-	private insertLinkWithoutDisplay(): void {
+	private insertLinkViaTab(): void {
 		const item = this.getSelectedSuggestion();
 		if (!item) return;
-		// Synthesize a Tab event; onChooseSuggestion will XOR with swapEnterAndTab
 		this.onChooseSuggestion(item, new KeyboardEvent("keydown", { key: "Tab" }));
 		this.close();
 	}

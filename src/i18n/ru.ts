@@ -34,9 +34,9 @@ export const ru: Partial<typeof en> = {
 	"settings.inline-link-suggest-description":
 		"Использовать морфологический поиск плагина вместо стандартного автодополнения при вводе [[",
 	"settings.swap-enter-and-tab":
-		"Поменять местами Enter и Tab (экспериментально)",
+		"Поменять местами Enter и Tab",
 	"settings.swap-enter-and-tab-description":
-		"Если включено: Enter вставляет ссылку без отображаемого текста [[Заголовок]], Tab вставляет ссылку с отображаемым текстом [[Заголовок|текст]]",
+		"Если включено: Enter вставляет ссылку с отображаемым текстом [[Заголовок|текст]], Tab вставляет ссылку без отображаемого текста [[Заголовок]]",
 	"settings.show-boost-reason-hint":
 		"Показывать причину контекстного буста",
 	"settings.show-boost-reason-hint-description":

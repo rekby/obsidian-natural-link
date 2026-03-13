@@ -183,6 +183,12 @@ export default class NaturalLinkPlugin extends Plugin {
 		const data = (await this.loadData()) as Partial<NaturalLinkSettings> | null;
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, data);
 
+		if (this.settings.version < 2) {
+			this.settings.swapEnterAndTab = !this.settings.swapEnterAndTab;
+			this.settings.version = 2;
+			await this.saveSettings();
+		}
+
 		const recentRaw = this.app.loadLocalStorage("natural-link-recentNotes") as string | null;
 		const recentData = recentRaw
 			? (JSON.parse(recentRaw) as Record<string, number>)

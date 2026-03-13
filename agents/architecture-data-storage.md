@@ -18,12 +18,16 @@ Two storage layers are used:
 
 ## `data.json` fields
 
-- `version` (`number`): settings schema version. Current value: `1`.
+- `version` (`number`): settings schema version. Current value: `2`.
 - `searchNonExistingNotes` (`boolean`, default `true`):
   - include unresolved `[[links]]` from `metadataCache.unresolvedLinks` in suggestions.
 - `inlineLinkSuggest` (`boolean`, default `false`):
   - when `true`, plugin `EditorSuggest` handles `[[` trigger;
   - when `false`, native Obsidian suggest handles it.
+- `swapEnterAndTab` (`boolean`, default `false`):
+  - when `false` (default): Enter inserts without display text, Tab inserts with display text;
+  - when `true`: Enter inserts with display text, Tab inserts without.
+  - Migrated from v1 to v2: stored boolean was flipped to preserve existing user behavior after the default was inverted.
 
 ## `localStorage` fields
 

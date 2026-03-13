@@ -177,11 +177,11 @@ export class LinkSuggestCore {
 			{ command: "↑↓", purpose: t("modal.instruction.navigate") },
 			{
 				command: "↵",
-				purpose: t(swapped ? "modal.instruction.insert-without-display" : "modal.instruction.insert-link"),
+				purpose: t(swapped ? "modal.instruction.insert-link" : "modal.instruction.insert-without-display"),
 			},
 			{
 				command: "tab",
-				purpose: t(swapped ? "modal.instruction.insert-link" : "modal.instruction.insert-without-display"),
+				purpose: t(swapped ? "modal.instruction.insert-without-display" : "modal.instruction.insert-link"),
 			},
 			{ command: "shift ↵", purpose: t("modal.instruction.insert-as-typed") },
 			{ command: "esc", purpose: t("modal.instruction.dismiss") },

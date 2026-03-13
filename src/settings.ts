@@ -9,14 +9,14 @@ export interface NaturalLinkSettings {
 	searchNonExistingNotes: boolean;
 	/** Whether to replace native [[ link suggest with the plugin's morphological search */
 	inlineLinkSuggest: boolean;
-	/** Whether to swap Enter (insert with display) and Tab (insert without display) key actions */
+	/** Whether to swap Enter (insert without display) and Tab (insert with display) key actions */
 	swapEnterAndTab: boolean;
 	/** Show small reason hint for context-boosted note suggestions */
 	showBoostReasonHint: boolean;
 }
 
 export const DEFAULT_SETTINGS: NaturalLinkSettings = {
-	version: 1,
+	version: 2,
 	searchNonExistingNotes: true,
 	inlineLinkSuggest: false,
 	swapEnterAndTab: false,

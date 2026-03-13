@@ -40,7 +40,7 @@ export class NaturalLinkSuggest extends EditorSuggest<LinkSuggestion> {
 			return false;
 		});
 		this.scope.register([], "Tab", () => {
-			this.insertLinkWithoutDisplay();
+			this.insertLinkViaTab();
 			return false;
 		});
 	}
@@ -96,7 +96,7 @@ export class NaturalLinkSuggest extends EditorSuggest<LinkSuggestion> {
 		const core = this.activeCore ?? this.buildCore();
 		const asTyped = evt instanceof KeyboardEvent && evt.shiftKey;
 		const isTab = evt instanceof KeyboardEvent && evt.key === "Tab";
-		const withoutDisplay = isTab !== this.plugin.settings.swapEnterAndTab;
+		const withoutDisplay = isTab === this.plugin.settings.swapEnterAndTab;
 
 		if (!asTyped) {
 			core.prepareBlockId(item);
@@ -169,7 +169,7 @@ export class NaturalLinkSuggest extends EditorSuggest<LinkSuggestion> {
 		this.close();
 	}
 
-	private insertLinkWithoutDisplay(): void {
+	private insertLinkViaTab(): void {
 		const item = this.getSelectedSuggestion();
 		if (!item) return;
 		this.selectSuggestion(item, new KeyboardEvent("keydown", { key: "Tab" }));
