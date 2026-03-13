@@ -36,9 +36,18 @@ jobs:
             - name: up version
               id: bump-version
               run: |
-                npm config set tag-version-prefix ""
-                npm version "${{ github.event.inputs.version-part }}"
-                VERSION=$(grep '"version"' manifest.json | cut -d '"' -f 4)
+                CURRENT_VERSION=$(node -e "console.log(JSON.parse(require('fs').readFileSync('package.json', 'utf8')).version)")
+
+                if [[ "$CURRENT_VERSION" == *-pre-release ]]; then
+                  VERSION="${CURRENT_VERSION%-pre-release}"
+                  npm config set tag-version-prefix ""
+                  npm version "$VERSION"
+                else
+                  npm config set tag-version-prefix ""
+                  npm version "${{ github.event.inputs.version-part }}"
+                  VERSION=$(node -e "console.log(JSON.parse(require('fs').readFileSync('package.json', 'utf8')).version)")
+                fi
+
                 echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
             - name: build
