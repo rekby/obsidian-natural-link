@@ -10,6 +10,7 @@ export const DEMO_ARTIFACTS_ROOT = path.resolve("obsidian-tests/demo-artifacts")
 export const DEMO_OUTPUT_ROOT = path.resolve("docs/demo");
 export const HUMAN_KEY_DELAY_MS = 200;
 export const HUMAN_PAUSE_MS = 800;
+export const OPEN_MODAL_CAPTION = "Cmd/Ctrl+Shift+K";
 
 const APP_SELECTOR = ".app-container";
 const INPUT_SELECTOR = ".modal-container .prompt-input";
@@ -190,8 +191,31 @@ export async function configureDemoEnvironment(locale, inlineLinkSuggest) {
 			.workspace-split.mod-root {
 				inset: 0 !important;
 			}
+			#natural-link-demo-key-overlay {
+				position: fixed;
+				right: 28px;
+				bottom: 28px;
+				z-index: 10000;
+				display: none;
+				padding: 10px 14px;
+				border-radius: 12px;
+				background: rgba(28, 28, 30, 0.88);
+				color: #fff;
+				font: 600 18px/1.2 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+				letter-spacing: 0.02em;
+				box-shadow: 0 14px 32px rgba(0, 0, 0, 0.18);
+			}
 		`;
 		document.head.append(style);
+
+		let overlay = document.getElementById("natural-link-demo-key-overlay");
+		if (!overlay) {
+			overlay = document.createElement("div");
+			overlay.id = "natural-link-demo-key-overlay";
+			document.body.append(overlay);
+		}
+		overlay.textContent = "";
+		overlay.style.display = "none";
 
 		document.body.classList.remove("theme-dark");
 		document.body.classList.add("theme-light");
@@ -240,6 +264,22 @@ export async function typeText(text, recorder) {
 		await browser.keys(char);
 		await recorder.captureAndPause(HUMAN_KEY_DELAY_MS);
 	}
+}
+
+export async function captureKeyPress(recorder, label, durationMs = 650) {
+	await browser.execute((text) => {
+		const overlay = document.getElementById("natural-link-demo-key-overlay");
+		if (!overlay) return;
+		overlay.textContent = text;
+		overlay.style.display = "block";
+	}, label);
+	await recorder.captureAndPause(durationMs);
+	await browser.execute(() => {
+		const overlay = document.getElementById("natural-link-demo-key-overlay");
+		if (!overlay) return;
+		overlay.textContent = "";
+		overlay.style.display = "none";
+	});
 }
 
 export async function openModal() {

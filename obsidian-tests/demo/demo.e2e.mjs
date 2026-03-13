@@ -6,9 +6,11 @@ import { obsidianPage } from "wdio-obsidian-service";
 import {
 	DemoRecorder,
 	HUMAN_PAUSE_MS,
+	OPEN_MODAL_CAPTION,
 	prepareDemoScenario,
 	openModal,
 	typeText,
+	captureKeyPress,
 	expectModalPlaceholder,
 	expectSelectedSuggestionText,
 	expectHeadingBadge,
@@ -34,12 +36,15 @@ const scenarios = [
 		expectedEditorText:
 			"Weekend errands:\n\nThe best place for the winter gloves is [[Wooden box|wooden boxes]]",
 		run: async (scenario, recorder) => {
+			await recorder.captureAndPause(HUMAN_PAUSE_MS);
+			await captureKeyPress(recorder, OPEN_MODAL_CAPTION);
 			await openModal();
 			await expectModalPlaceholder(scenario.locale);
 			await recorder.captureAndPause(HUMAN_PAUSE_MS);
 			await typeText(scenario.query, recorder);
 			await expectSelectedSuggestionText(scenario.selectedText);
 			await recorder.captureAndPause(HUMAN_PAUSE_MS);
+			await captureKeyPress(recorder, scenario.acceptKey);
 			await browser.keys(scenario.acceptKey);
 			await waitForEditorText(scenario.expectedEditorText);
 			await recorder.captureAndPause(HUMAN_PAUSE_MS);
@@ -62,6 +67,7 @@ const scenarios = [
 			await typeText(scenario.query, recorder);
 			await expectSelectedSuggestionText(scenario.selectedText);
 			await recorder.captureAndPause(HUMAN_PAUSE_MS);
+			await captureKeyPress(recorder, "Enter");
 			await browser.keys("Enter");
 			await waitForEditorText(scenario.expectedEditorText);
 			await recorder.captureAndPause(HUMAN_PAUSE_MS);
@@ -79,6 +85,8 @@ const scenarios = [
 		expectedEditorText:
 			"Travel planning:\n\nBefore I book anything, I revisit [[Trip to Istanbul#Packing list|Istanbul trip]]",
 		run: async (scenario, recorder) => {
+			await recorder.captureAndPause(HUMAN_PAUSE_MS);
+			await captureKeyPress(recorder, OPEN_MODAL_CAPTION);
 			await openModal();
 			await expectModalPlaceholder(scenario.locale);
 			await recorder.captureAndPause(HUMAN_PAUSE_MS);
@@ -86,6 +94,7 @@ const scenarios = [
 			await expectSelectedSuggestionText(scenario.selectedText);
 			await expectHeadingBadge(scenario.locale);
 			await recorder.captureAndPause(HUMAN_PAUSE_MS);
+			await captureKeyPress(recorder, scenario.acceptKey);
 			await browser.keys(scenario.acceptKey);
 			await waitForEditorText(scenario.expectedEditorText);
 			await recorder.captureAndPause(HUMAN_PAUSE_MS);
@@ -102,6 +111,8 @@ const scenarios = [
 		targetFile: "Sourdough starter.md",
 		targetLineFragment: "Feed the starter after breakfast",
 		run: async (scenario, recorder) => {
+			await recorder.captureAndPause(HUMAN_PAUSE_MS);
+			await captureKeyPress(recorder, OPEN_MODAL_CAPTION);
 			await openModal();
 			await expectModalPlaceholder(scenario.locale);
 			await recorder.captureAndPause(HUMAN_PAUSE_MS);
@@ -109,6 +120,7 @@ const scenarios = [
 			await expectSelectedSuggestionText(scenario.selectedText);
 			await expectBlockBadge(scenario.locale);
 			await recorder.captureAndPause(HUMAN_PAUSE_MS);
+			await captureKeyPress(recorder, "Enter");
 			await browser.keys("Enter");
 
 			const blockId = await waitForBlockId(
@@ -140,12 +152,15 @@ const scenarios = [
 		expectedEditorText:
 			"Домашние дела:\n\nЛучше всего хранить зимние перчатки в [[Деревянная коробка|деревянную коробку]]",
 		run: async (scenario, recorder) => {
+			await recorder.captureAndPause(HUMAN_PAUSE_MS);
+			await captureKeyPress(recorder, OPEN_MODAL_CAPTION);
 			await openModal();
 			await expectModalPlaceholder(scenario.locale);
 			await recorder.captureAndPause(HUMAN_PAUSE_MS);
 			await typeText(scenario.query, recorder);
 			await expectSelectedSuggestionText(scenario.selectedText);
 			await recorder.captureAndPause(HUMAN_PAUSE_MS);
+			await captureKeyPress(recorder, scenario.acceptKey);
 			await browser.keys(scenario.acceptKey);
 			await waitForEditorText(scenario.expectedEditorText);
 			await recorder.captureAndPause(HUMAN_PAUSE_MS);
@@ -168,6 +183,7 @@ const scenarios = [
 			await typeText(scenario.query, recorder);
 			await expectSelectedSuggestionText(scenario.selectedText);
 			await recorder.captureAndPause(HUMAN_PAUSE_MS);
+			await captureKeyPress(recorder, "Enter");
 			await browser.keys("Enter");
 			await waitForEditorText(scenario.expectedEditorText);
 			await recorder.captureAndPause(HUMAN_PAUSE_MS);
@@ -185,6 +201,8 @@ const scenarios = [
 		expectedEditorText:
 			"Планы на поездку:\n\nПеред покупкой билетов я открываю [[Поездка в Стамбул#Что взять|поездка в стамбул]]",
 		run: async (scenario, recorder) => {
+			await recorder.captureAndPause(HUMAN_PAUSE_MS);
+			await captureKeyPress(recorder, OPEN_MODAL_CAPTION);
 			await openModal();
 			await expectModalPlaceholder(scenario.locale);
 			await recorder.captureAndPause(HUMAN_PAUSE_MS);
@@ -192,6 +210,7 @@ const scenarios = [
 			await expectSelectedSuggestionText(scenario.selectedText);
 			await expectHeadingBadge(scenario.locale);
 			await recorder.captureAndPause(HUMAN_PAUSE_MS);
+			await captureKeyPress(recorder, scenario.acceptKey);
 			await browser.keys(scenario.acceptKey);
 			await waitForEditorText(scenario.expectedEditorText);
 			await recorder.captureAndPause(HUMAN_PAUSE_MS);
@@ -208,6 +227,8 @@ const scenarios = [
 		targetFile: "Пшеничная закваска.md",
 		targetLineFragment: "Подкормить закваску после завтрака",
 		run: async (scenario, recorder) => {
+			await recorder.captureAndPause(HUMAN_PAUSE_MS);
+			await captureKeyPress(recorder, OPEN_MODAL_CAPTION);
 			await openModal();
 			await expectModalPlaceholder(scenario.locale);
 			await recorder.captureAndPause(HUMAN_PAUSE_MS);
@@ -215,6 +236,7 @@ const scenarios = [
 			await expectSelectedSuggestionText(scenario.selectedText);
 			await expectBlockBadge(scenario.locale);
 			await recorder.captureAndPause(HUMAN_PAUSE_MS);
+			await captureKeyPress(recorder, "Enter");
 			await browser.keys("Enter");
 
 			const blockId = await waitForBlockId(
