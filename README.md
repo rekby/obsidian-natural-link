@@ -45,12 +45,20 @@ The inline suggest commands let you control `[[` replacement without opening set
 
 **English demos**
 
+**Modal search**
+Type a natural phrase, open the modal, and accept the best match with `Tab` to preserve the typed wording.
 ![Modal search demo](docs/demo/en/modal-search.gif)
 
+**Inline `[[` suggest**
+Start typing a wikilink directly in the editor and accept the suggestion with `Enter`.
 ![Inline suggest demo](docs/demo/en/inline-link.gif)
 
+**Heading link**
+Find a note first, then narrow it to a specific heading with `#heading`.
 ![Heading link demo](docs/demo/en/heading-link.gif)
 
+**Block link**
+Search inside a note with `^block`, insert the block link, and show the generated block ID in the target note.
 ![Block link demo](docs/demo/en/block-link.gif)
 
 ### Recommended hotkey
