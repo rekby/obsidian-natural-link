@@ -7,7 +7,7 @@ An Obsidian plugin that lets you create links to notes using natural word forms.
 ![Modal search example: typing "wooden boxes" finds the note "Wooden box", with the recommended hotkey highlighted](docs/demo/en/modal-search.png)
 
 *Optional feature: replaces the standard inline link suggestions with the plugin's morphological search (can be enabled in the plugin settings):*
-![Inline suggest: typing "[[morning runs" suggests "Morning run"](docs/demo/en/inline-link.png)
+![Inline suggest: typing `"[[morning runs"` suggests "`Morning run`"](docs/demo/en/inline-link.png)
 
 ## Features
 
