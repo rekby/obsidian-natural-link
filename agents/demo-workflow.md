@@ -1,11 +1,12 @@
 # Demo workflow
 
-This file covers the localized README demo suite: demo vault content, capture flow, and GIF rendering.
+This file covers the localized README demo suite: demo vault content, static screenshot capture, and GIF rendering.
 
 ## Demo assets
 
 - Demo vaults live in `obsidian-tests/demo-vaults/en` and `obsidian-tests/demo-vaults/ru`.
 - Raw captured frames and manifests are written to `obsidian-tests/demo-artifacts/` and must stay gitignored.
+- Static README screenshots are written to `docs/demo/en/*.png` and `docs/demo/ru/*.png`.
 - Final README assets are rendered into `docs/demo/en/*.gif` and `docs/demo/ru/*.gif`.
 
 ## Scenario matrix
@@ -34,14 +35,16 @@ The scenario names are stable because they are reused in:
 ## Regeneration commands
 
 ```bash
+npm run demo:screenshots
 npm run demo:capture
 npm run demo:render
 npm run demo
 ```
 
+- `demo:screenshots` builds the plugin and refreshes the localized README PNG screenshots for both English and Russian.
 - `demo:capture` builds the plugin and records PNG frames plus JSON manifests.
 - `demo:render` requires `ffmpeg` and converts every manifest into a GIF.
-- `demo` runs both steps end-to-end.
+- `demo` refreshes the static README PNG screenshots and then runs the GIF pipeline end-to-end.
 
 ## Maintenance expectations
 

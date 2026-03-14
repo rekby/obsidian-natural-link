@@ -17,9 +17,10 @@ npm run build        # Type check (tsc) + production build (esbuild)
 npm test             # Run tests (vitest run)
 npm run test:watch   # Watch mode tests (vitest)
 npm run obsidian-tests # Build plugin and run real Obsidian UI tests
+npm run demo:screenshots # Capture the localized static README PNG screenshots
 npm run demo:capture # Capture localized README demo frames in Obsidian
 npm run demo:render  # Render demo GIFs via ffmpeg
-npm run demo         # Full demo regeneration pipeline
+npm run demo         # Full README screenshot + demo GIF regeneration pipeline
 npm run lint         # ESLint
 ```
 

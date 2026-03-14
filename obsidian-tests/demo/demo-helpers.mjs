@@ -12,7 +12,7 @@ export const HUMAN_KEY_DELAY_MS = 200;
 export const HUMAN_PAUSE_MS = 800;
 export const OPEN_MODAL_CAPTION = "Cmd/Ctrl+Shift+K";
 
-const APP_SELECTOR = ".app-container";
+export const APP_SELECTOR = ".app-container";
 const INPUT_SELECTOR = ".modal-container .prompt-input";
 const SELECTED_SUGGESTION_SELECTOR = ".suggestion-item.is-selected";
 export const LOCALE_TEXT = {

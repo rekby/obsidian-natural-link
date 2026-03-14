@@ -8,7 +8,7 @@ const installerVersion = process.env.OBSIDIAN_INSTALLER_VERSION ?? "latest";
 export const config = {
 	runner: "local",
 	framework: "mocha",
-	specs: ["./obsidian-tests/demo/**/*.e2e.mjs"],
+	specs: ["./obsidian-tests/demo/demo.e2e.mjs"],
 	maxInstances: 1,
 	capabilities: [
 		{

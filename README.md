@@ -4,10 +4,10 @@
 
 An Obsidian plugin that lets you create links to notes using natural word forms. Type a word in any form and the plugin will find matching notes regardless of word order.
 
-![Search example: typing "runnin" finds the note "Run is good"](Screenshot.png)
+![Modal search example: typing "wooden boxes" finds the note "Wooden box", with the recommended hotkey highlighted](docs/demo/en/modal-search.png)
 
-*Experimental feature: replaces the standard inline link suggestions with the plugin's morphological search (can be enabled in the plugin settings):*
-![Inline suggest: morphological search replaces the native autocomplete](Screenshot-inline.png)
+*Optional feature: replaces the standard inline link suggestions with the plugin's morphological search (can be enabled in the plugin settings):*
+![Inline suggest: typing "[[morning runs" suggests "Morning run"](docs/demo/en/inline-link.png)
 
 ## Features
 
@@ -117,9 +117,10 @@ npm run build        # Type check + production build
 npm test             # Run tests
 npm run test:watch   # Watch mode tests
 npm run obsidian-tests # Build plugin and run real Obsidian UI tests
+npm run demo:screenshots # Capture the static README PNG screenshots
 npm run demo:capture # Capture localized demo frames in real Obsidian
 npm run demo:render  # Render demo GIFs from captured frames via ffmpeg
-npm run demo         # Capture + render all README demo GIFs
+npm run demo         # Refresh README PNG screenshots and localized demo GIFs
 npm run lint         # Lint
 ```
 
