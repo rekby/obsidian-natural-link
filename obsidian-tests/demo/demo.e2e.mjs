@@ -51,13 +51,39 @@ const scenarios = [
 		},
 	},
 	{
+		name: "suppletive-search",
+		locale: "en",
+		vault: EN_VAULT,
+		startFile: "Weekend notes.md",
+		initialText: "Workout log:\n\nYesterday after lunch I ",
+		query: "went walking",
+		selectedText: "Go for a walk",
+		acceptKey: "Tab",
+		expectedEditorText:
+			"Workout log:\n\nYesterday after lunch I [[Go for a walk|went walking]]",
+		run: async (scenario, recorder) => {
+			await recorder.captureAndPause(HUMAN_PAUSE_MS);
+			await captureKeyPress(recorder, OPEN_MODAL_CAPTION);
+			await openModal();
+			await expectModalPlaceholder(scenario.locale);
+			await recorder.captureAndPause(HUMAN_PAUSE_MS);
+			await typeText(scenario.query, recorder);
+			await expectSelectedSuggestionText(scenario.selectedText);
+			await recorder.captureAndPause(HUMAN_PAUSE_MS);
+			await captureKeyPress(recorder, scenario.acceptKey);
+			await browser.keys(scenario.acceptKey);
+			await waitForEditorText(scenario.expectedEditorText);
+			await recorder.captureAndPause(HUMAN_PAUSE_MS);
+		},
+	},
+	{
 		name: "inline-link",
 		locale: "en",
 		vault: EN_VAULT,
 		startFile: "Weekend notes.md",
 		inlineLinkSuggest: true,
 		initialText: "Sunday reset:\n\nA small ritual that helps me wake up is ",
-		query: "[[morning runs",
+		query: "[[running mornings",
 		selectedText: "Morning run",
 		expectedEditorText:
 			"Sunday reset:\n\nA small ritual that helps me wake up is [[Morning run]]",
@@ -151,6 +177,32 @@ const scenarios = [
 		acceptKey: "Tab",
 		expectedEditorText:
 			"Домашние дела:\n\nЛучше всего хранить зимние перчатки в [[Деревянная коробка|деревянную коробку]]",
+		run: async (scenario, recorder) => {
+			await recorder.captureAndPause(HUMAN_PAUSE_MS);
+			await captureKeyPress(recorder, OPEN_MODAL_CAPTION);
+			await openModal();
+			await expectModalPlaceholder(scenario.locale);
+			await recorder.captureAndPause(HUMAN_PAUSE_MS);
+			await typeText(scenario.query, recorder);
+			await expectSelectedSuggestionText(scenario.selectedText);
+			await recorder.captureAndPause(HUMAN_PAUSE_MS);
+			await captureKeyPress(recorder, scenario.acceptKey);
+			await browser.keys(scenario.acceptKey);
+			await waitForEditorText(scenario.expectedEditorText);
+			await recorder.captureAndPause(HUMAN_PAUSE_MS);
+		},
+	},
+	{
+		name: "suppletive-search",
+		locale: "ru",
+		vault: RU_VAULT,
+		startFile: "Заметки выходных.md",
+		initialText: "Дневные дела:\n\nПосле обеда нужно сводить ",
+		query: "детей на площадку",
+		selectedText: "Ребёнок на площадке",
+		acceptKey: "Tab",
+		expectedEditorText:
+			"Дневные дела:\n\nПосле обеда нужно сводить [[Ребёнок на площадке|детей на площадку]]",
 		run: async (scenario, recorder) => {
 			await recorder.captureAndPause(HUMAN_PAUSE_MS);
 			await captureKeyPress(recorder, OPEN_MODAL_CAPTION);

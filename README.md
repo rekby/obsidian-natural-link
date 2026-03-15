@@ -4,10 +4,10 @@
 
 An Obsidian plugin that lets you create links to notes using natural word forms. Type a word in any form and the plugin will find matching notes regardless of word order.
 
-![Modal search example: typing "wooden boxes" finds the note "Wooden box", with the recommended hotkey highlighted](docs/demo/en/modal-search.png)
+![Modal search example: typing "went walking" finds the note "Go for a walk" via suppletive dictionary, with the recommended hotkey highlighted](docs/demo/en/modal-search.png)
 
 *Optional feature: replaces the standard inline link suggestions with the plugin's morphological search (can be enabled in the plugin settings):*
-![Inline suggest: typing `"[[morning runs"` suggests "`Morning run`"](docs/demo/en/inline-link.png)
+![Inline suggest: typing `"[[running mornings"` suggests "`Morning run`"](docs/demo/en/inline-link.png)
 
 ## Features
 
@@ -48,6 +48,10 @@ The inline suggest commands let you control `[[` replacement without opening set
 **Modal search**
 Type a natural phrase, open the modal, and accept the best match with `Tab` to preserve the typed wording.
 ![Modal search demo](docs/demo/en/modal-search.gif)
+
+**Suppletive form search**
+Type a completely different word form — "went walking" finds "Go for a walk" via the suppletive dictionary (`went` → `go`, `walking` → `walk`).
+![Suppletive search demo](docs/demo/en/suppletive-search.gif)
 
 **Inline `[[` suggest**
 Start typing a wikilink directly in the editor and accept the suggestion with `Enter`.

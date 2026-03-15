@@ -103,6 +103,17 @@ export async function waitForPlugin() {
 	);
 }
 
+async function readVaultDir(vaultPath) {
+	const resolved = path.resolve(vaultPath);
+	const entries = await fs.readdir(resolved);
+	const snapshot = {};
+	for (const entry of entries) {
+		if (!entry.endsWith(".md")) continue;
+		snapshot[entry] = await fs.readFile(path.join(resolved, entry), "utf-8");
+	}
+	return snapshot;
+}
+
 export async function prepareDemoScenario({
 	vault,
 	locale,
@@ -110,7 +121,87 @@ export async function prepareDemoScenario({
 	inlineLinkSuggest = false,
 	initialText,
 }) {
-	await browser.reloadObsidian({ vault });
+	await browser.keys("Escape");
+	const modalContainer = await $(".modal-container");
+	if (await modalContainer.isDisplayed().catch(() => false)) {
+		await browser.keys("Escape");
+		await browser.waitUntil(
+			async () => !(await modalContainer.isDisplayed().catch(() => false)),
+			{ timeout: 5000 },
+		);
+	}
+
+	await browser.executeObsidian(({ app }) => {
+		for (const leaf of app.workspace.getLeavesOfType("markdown")) {
+			leaf.detach();
+		}
+	});
+
+	const targetFiles = await readVaultDir(vault);
+
+	const filesChanged = await browser.executeObsidian(
+		async ({ app, obsidian }, snapshot) => {
+			let changed = false;
+			const knownPaths = new Set(Object.keys(snapshot));
+
+			for (const file of app.vault.getMarkdownFiles()) {
+				if (!knownPaths.has(file.path)) {
+					await app.vault.delete(file);
+					changed = true;
+				}
+			}
+
+			for (const [filePath, content] of Object.entries(snapshot)) {
+				const file = app.vault.getAbstractFileByPath(filePath);
+				if (file instanceof obsidian.TFile) {
+					const current = await app.vault.read(file);
+					if (current !== content) {
+						await app.vault.modify(file, content);
+						changed = true;
+					}
+				} else {
+					await app.vault.create(filePath, content);
+					changed = true;
+				}
+			}
+			return changed;
+		},
+		targetFiles,
+	);
+
+	if (filesChanged) {
+		await browser.executeObsidian(({ app }) =>
+			new Promise((resolve) => {
+				if (app.metadataCache.initialized) {
+					const ref = app.metadataCache.on("resolved", () => {
+						app.metadataCache.offref(ref);
+						resolve();
+					});
+					setTimeout(() => {
+						app.metadataCache.offref(ref);
+						resolve();
+					}, 2000);
+				} else {
+					resolve();
+				}
+			}),
+		);
+	}
+
+	await browser.executeObsidian(({ app, plugins }) => {
+		const plugin = plugins.naturalLink;
+		if (!plugin) return;
+		plugin.recentNotes = new (plugin.recentNotes.constructor)();
+		app.saveLocalStorage("natural-link-recentNotes", null);
+
+		const pluginSuggest = app.workspace.editorSuggest?.suggests?.find(
+			(c) => c?.plugin === plugin,
+		);
+		if (pluginSuggest) {
+			pluginSuggest.activeCore = null;
+		}
+	});
+
 	await waitForPlugin();
 	await configureDemoEnvironment(locale, inlineLinkSuggest);
 	await obsidianPage.openFile(startFile);
@@ -298,7 +389,7 @@ export async function expectModalPlaceholder(locale) {
 
 export async function expectSelectedSuggestionText(text) {
 	const suggestion = await $(SELECTED_SUGGESTION_SELECTOR);
-	await suggestion.waitForDisplayed();
+	await suggestion.waitForDisplayed({ timeout: 1000 });
 	assert.match(await suggestion.getText(), new RegExp(text));
 }
 

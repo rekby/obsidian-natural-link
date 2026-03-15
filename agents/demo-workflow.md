@@ -11,9 +11,10 @@ This file covers the localized README demo suite: demo vault content, static scr
 
 ## Scenario matrix
 
-Each locale captures the same four scenarios:
+Each locale captures the same five scenarios:
 
 - `modal-search`: open the command modal, type a morphology-based query, accept with `Tab`.
+- `suppletive-search`: open the command modal, type a query that uses a suppletive word form (e.g. "better" → "good", "детей" → "ребёнок"), accept with `Tab`.
 - `inline-link`: type `[[...` inline with plugin suggest enabled, accept with `Enter`.
 - `heading-link`: search note first, then narrow with `#heading` and accept with `Tab`.
 - `block-link`: search note first, then narrow with `^block`, accept with `Enter`, then show the written `^blockId` in the target note.
@@ -26,6 +27,7 @@ The scenario names are stable because they are reused in:
 ## Capture rules
 
 - Use `wdio.demo.conf.mjs` and `obsidian-tests/demo/demo.e2e.mjs` for demo capture. Keep this separate from smoke E2E in `wdio.conf.mjs`.
+- Obsidian is launched **once** for the entire demo run. Between scenarios `prepareDemoScenario` uses `obsidianPage.resetVault(vault)` to sync vault files in place, resets plugin runtime state, and closes extra tabs — no full restart.
 - Keep the plugin runtime unchanged. Demo-specific behavior belongs in test helpers only.
 - Use a human pace: about 200 ms per typed character and about 800 ms for major pauses.
 - Capture the Obsidian app container instead of the entire desktop. Hide sidebars/status UI in the test helper so GIFs stay compact and stable.

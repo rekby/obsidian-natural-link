@@ -54,13 +54,13 @@ describe("Natural link README screenshots", function () {
 			vault: EN_VAULT,
 			locale: "en",
 			startFile: "Weekend notes.md",
-			initialText: "Weekend errands:\n\nThe best place for the winter gloves is ",
+			initialText: "Workout log:\n\nYesterday after lunch I ",
 		});
 
 		await openModal();
 		await expectModalPlaceholder("en");
-		await typeQuery("wooden boxes");
-		await expectSelectedSuggestionText("Wooden box");
+		await typeQuery("went walking");
+		await expectSelectedSuggestionText("Go for a walk");
 		await showHotkeyOverlay("Cmd/Ctrl+Shift+K");
 
 		await saveAppScreenshot(screenshotPath("en", "modal-search"));
@@ -77,7 +77,7 @@ describe("Natural link README screenshots", function () {
 		});
 
 		await focusEditor();
-		await typeQuery("[[morning runs");
+		await typeQuery("[[running mornings");
 		await expectSelectedSuggestionText("Morning run");
 
 		await saveAppScreenshot(screenshotPath("en", "inline-link"));
@@ -88,13 +88,13 @@ describe("Natural link README screenshots", function () {
 			vault: RU_VAULT,
 			locale: "ru",
 			startFile: "Заметки выходных.md",
-			initialText: "Домашние дела:\n\nЛучше всего хранить зимние перчатки в ",
+			initialText: "Дневные дела:\n\nПосле обеда нужно сводить ",
 		});
 
 		await openModal();
 		await expectModalPlaceholder("ru");
-		await typeQuery("деревянную коробку");
-		await expectSelectedSuggestionText("Деревянная коробка");
+		await typeQuery("детей на площадку");
+		await expectSelectedSuggestionText("Ребёнок на площадке");
 		await showHotkeyOverlay("Cmd/Ctrl+Shift+K");
 
 		await saveAppScreenshot(screenshotPath("ru", "modal-search"));
