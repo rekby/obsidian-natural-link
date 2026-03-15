@@ -1,5 +1,7 @@
 import { Stemmer } from "../types";
 import snowballFactory from "snowball-stemmers";
+import { IrregularFormsLookup } from "./irregular-forms";
+import { RUSSIAN_IRREGULAR_FORMS } from "./russian-irregular-forms";
 
 const snowball = snowballFactory.newStemmer("russian");
 
@@ -45,9 +47,22 @@ function normalizeConsonantAlternations(stem: string): string {
 	return stem;
 }
 
+function baseStem(word: string): string[] {
+	const snowballStem = snowball.stem(normalizeYo(word));
+	return [normalizeConsonantAlternations(snowballStem)];
+}
+
 export class RussianStemmer implements Stemmer {
+	private readonly irregularLookup = new IrregularFormsLookup(
+		RUSSIAN_IRREGULAR_FORMS,
+		baseStem,
+	);
+
 	stem(word: string): string[] {
-		const snowballStem = snowball.stem(normalizeYo(word));
-		return [normalizeConsonantAlternations(snowballStem)];
+		return this.irregularLookup.stem(word);
+	}
+
+	stemPrefix(prefix: string): string[] {
+		return this.irregularLookup.stemPrefix(prefix);
 	}
 }

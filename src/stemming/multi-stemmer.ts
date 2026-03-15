@@ -16,4 +16,17 @@ export class MultiStemmer implements Stemmer {
 		}
 		return [...stems];
 	}
+
+	stemPrefix(prefix: string): string[] {
+		const stems = new Set<string>();
+		for (const stemmer of this.stemmers) {
+			if (!stemmer.stemPrefix) {
+				continue;
+			}
+			for (const s of stemmer.stemPrefix(prefix)) {
+				stems.add(s);
+			}
+		}
+		return [...stems];
+	}
 }

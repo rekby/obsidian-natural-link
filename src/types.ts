@@ -5,6 +5,11 @@
 export interface Stemmer {
 	/** Reduces a word to its stem(s). May return multiple variants for multi-language support. */
 	stem(word: string): string[];
+	/**
+	 * Optional prefix-specific stemming used for the last (incomplete) query token.
+	 * Implementations may return additional stems derived from irregular-form dictionaries.
+	 */
+	stemPrefix?(prefix: string): string[];
 }
 
 /**

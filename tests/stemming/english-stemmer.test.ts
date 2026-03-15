@@ -39,4 +39,20 @@ describe("EnglishStemmer", () => {
 		expect(result.length).toBe(1);
 		expect(typeof result[0]).toBe("string");
 	});
+
+	it("connects irregular plural to canonical singular", () => {
+		const miceStems = new Set(stemmer.stem("mice"));
+		const mouseStems = stemmer.stem("mouse");
+		expect(mouseStems.some((s) => miceStems.has(s))).toBe(true);
+	});
+
+	it("returns canonical stems for irregular prefixes", () => {
+		const prefixStems = new Set(stemmer.stemPrefix("mic"));
+		const mouseStems = stemmer.stem("mouse");
+		expect(mouseStems.some((s) => prefixStems.has(s))).toBe(true);
+	});
+
+	it("returns no prefix stems for short prefixes", () => {
+		expect(stemmer.stemPrefix("xy")).toEqual([]);
+	});
 });

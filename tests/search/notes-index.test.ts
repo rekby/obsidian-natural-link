@@ -198,6 +198,27 @@ describe("NotesIndex", () => {
 		});
 	});
 
+	describe("irregular forms", () => {
+		it("finds 'Mouse' by query 'mice' and vice versa", () => {
+			const index = new NotesIndex([makeNote("Mouse"), makeNote("Mice")], stemmer);
+			expect(index.search("mice").map((r) => r.note.title)).toContain("Mouse");
+			expect(index.search("mouse").map((r) => r.note.title)).toContain("Mice");
+		});
+
+		it("finds 'Mouse' while typing irregular prefix", () => {
+			const index = new NotesIndex([makeNote("Mouse")], stemmer);
+			const results = index.search("mic");
+			expect(results.length).toBe(1);
+			expect(results[0]!.note.title).toBe("Mouse");
+		});
+
+		it("finds 'Человек' by query 'людей' and vice versa", () => {
+			const index = new NotesIndex([makeNote("Человек"), makeNote("Люди")], stemmer);
+			expect(index.search("людей").map((r) => r.note.title)).toContain("Человек");
+			expect(index.search("человека").map((r) => r.note.title)).toContain("Люди");
+		});
+	});
+
 	describe("ё normalization", () => {
 		it("finds note 'костыль' by query 'костылём'", () => {
 			const index = new NotesIndex([makeNote("костыль")], stemmer);

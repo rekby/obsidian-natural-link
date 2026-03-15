@@ -1,4 +1,3 @@
-import assert from "node:assert/strict";
 import { $, $$, browser } from "@wdio/globals";
 import { obsidianPage } from "wdio-obsidian-service";
 
@@ -371,7 +370,7 @@ export async function resetVault(defaultSettings) {
 
 	// 5. Reset plugin settings and clear runtime state.
 	await browser.executeObsidian(
-		async ({ plugins }, nextSettings) => {
+		async ({ app, plugins }, nextSettings) => {
 			const plugin = plugins.naturalLink;
 			if (!plugin) return;
 

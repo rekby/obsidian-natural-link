@@ -91,4 +91,22 @@ describe("RussianStemmer", () => {
 		const unique = new Set(stems.map((s) => s[0]));
 		expect(unique.size).toBe(1);
 	});
+
+	it("connects suppletive form 'людей' to canonical 'человек'", () => {
+		const inflected = new Set(stemmer.stem("людей"));
+		const canonical = stemmer.stem("человек");
+		expect(canonical.some((s) => inflected.has(s))).toBe(true);
+	});
+
+	it("connects another case form 'людям' to canonical 'человек'", () => {
+		const inflected = new Set(stemmer.stem("людям"));
+		const canonical = stemmer.stem("человек");
+		expect(canonical.some((s) => inflected.has(s))).toBe(true);
+	});
+
+	it("returns canonical stems for russian irregular prefixes", () => {
+		const prefixStems = new Set(stemmer.stemPrefix("люд"));
+		const canonical = stemmer.stem("человек");
+		expect(canonical.some((s) => prefixStems.has(s))).toBe(true);
+	});
 });

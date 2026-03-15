@@ -6,9 +6,12 @@ For persistence details see `agents/architecture-data-storage.md`.
 
 ## Relevant modules
 
-- `src/types.ts` (`Stemmer`): `stem(word: string): string[]`
+- `src/types.ts` (`Stemmer`): `stem(word: string): string[]`, optional `stemPrefix(prefix: string): string[]`
 - `src/stemming/russian-stemmer.ts`: Russian Snowball stemming with `ё -> е` plus consonant alternation normalization (`г/д/з/ж`, `к/т/ц/ч`, `х/с/ш`, `ст/ск/щ`, `б/бл`, `п/пл`, `в/вл`, `м/мл`, `ф/фл`)
 - `src/stemming/english-stemmer.ts`: English Snowball stemming
+- `src/stemming/irregular-forms.ts`: `IrregularFormsLookup`, shared irregular dictionary logic with stem-level matching and prefix lookup for incomplete last token
+- `src/stemming/english-irregular-forms.ts`: English irregular dictionary (`irregular -> canonical`)
+- `src/stemming/russian-irregular-forms.ts`: Russian irregular dictionary (`irregular -> canonical`)
 - `src/stemming/multi-stemmer.ts`: combines enabled stemmers and deduplicates stems
 - `src/search/tokenizer.ts`: word tokenization and lowercasing
 - `src/search/notes-index.ts`: index construction and query search
@@ -23,6 +26,7 @@ For persistence details see `agents/architecture-data-storage.md`.
    - match stems exactly against note title/alias stems.
 3. For the last word:
    - match by prefix against stems or original tokens;
+   - if stemmers implement `stemPrefix()`, include dictionary-derived canonical stems for irregular-prefix typing;
    - supports incomplete user input.
 4. Allow partial matches (not all query words are required), but rank them lower.
 5. Apply ranking formula:

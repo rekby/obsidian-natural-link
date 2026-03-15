@@ -126,7 +126,7 @@ npm run lint         # Lint
 
 ## Known limitations
 
-- **Irregular word forms**: The plugin currently cannot connect words with entirely different roots (e.g. "mouse" and "mice").
+- **Irregular word forms coverage is still small**: The plugin now supports dictionary-based irregular matches, but the shipped dictionary is intentionally minimal and will be expanded in follow-up updates.
 - **No typo tolerance**: Currently matches are exact on word roots. Fuzzy matching is planned.
 
 ## License

@@ -50,4 +50,31 @@ describe("MultiStemmer", () => {
 		const result = multi.stem("word");
 		expect(result).toEqual([]);
 	});
+
+	it("combines prefix stems from stemmers that implement stemPrefix", () => {
+		const prefixA: Stemmer = {
+			stem: (word: string) => [word],
+			stemPrefix: (prefix: string) => [prefix + "_a"],
+		};
+		const prefixB: Stemmer = {
+			stem: (word: string) => [word],
+			stemPrefix: (prefix: string) => [prefix + "_b"],
+		};
+		const multi = new MultiStemmer([prefixA, prefixB]);
+		const result = multi.stemPrefix("pre");
+		expect(result).toContain("pre_a");
+		expect(result).toContain("pre_b");
+	});
+
+	it("ignores stemmers without stemPrefix", () => {
+		const withPrefix: Stemmer = {
+			stem: (word: string) => [word],
+			stemPrefix: () => ["ok"],
+		};
+		const withoutPrefix: Stemmer = {
+			stem: (word: string) => [word],
+		};
+		const multi = new MultiStemmer([withPrefix, withoutPrefix]);
+		expect(multi.stemPrefix("anything")).toEqual(["ok"]);
+	});
 });

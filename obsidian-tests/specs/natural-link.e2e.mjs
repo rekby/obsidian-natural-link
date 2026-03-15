@@ -8,7 +8,6 @@ import {
 	waitForPlugin,
 	updatePluginSettings,
 	getPluginSetting,
-	setEditorText,
 	getEditorText,
 	focusEditor,
 	openModal,

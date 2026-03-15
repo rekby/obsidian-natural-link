@@ -46,6 +46,7 @@ npm run lint         # ESLint
 
 ## Known limitations
 
+- Irregular forms support is dictionary-based and currently ships with a minimal seed set (infrastructure is in place; dictionary expansion is tracked as follow-up work).
 - Snowball stemming plus current normalization improves many alternations, but does not cover all Russian lexical alternations (for example: `бег` / `бежать`). Full coverage requires lemmatization or semantic search.
 - No fuzzy/typo tolerance yet.
 

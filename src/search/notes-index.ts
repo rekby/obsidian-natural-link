@@ -180,6 +180,18 @@ export class NotesIndex {
 				}
 			}
 		}
+
+		if (this.stemmer.stemPrefix) {
+			const prefixStems = new Set(this.stemmer.stemPrefix(lastToken));
+			for (const stems of sourceStems) {
+				for (const sourceStem of stems) {
+					if (prefixStems.has(sourceStem)) {
+						return true;
+					}
+				}
+			}
+		}
+
 		return false;
 	}
 }
