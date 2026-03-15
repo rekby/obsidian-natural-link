@@ -11,9 +11,9 @@
 		"lint": "eslint .",
 		"test": "vitest run",
 		"test:watch": "vitest",
-		"obsidian-tests": "npm run build && wdio run ./wdio.conf.mjs",
-		"demo:screenshots": "npm run build && wdio run ./wdio.demo.conf.mjs --spec ./obsidian-tests/demo/readme-screenshots.e2e.mjs",
-		"demo:capture": "npm run build && wdio run ./wdio.demo.conf.mjs",
+		"obsidian-tests": "npm run build && ./node_modules/.bin/wdio run ./wdio.conf.mjs",
+		"demo:screenshots": "npm run build && ./node_modules/.bin/wdio run ./wdio.demo.conf.mjs --spec ./obsidian-tests/demo/readme-screenshots.e2e.mjs",
+		"demo:capture": "npm run build && ./node_modules/.bin/wdio run ./wdio.demo.conf.mjs",
 		"demo:render": "node ./obsidian-tests/demo/render-demo-gifs.mjs",
 		"demo": "npm run demo:screenshots && npm run demo:capture && npm run demo:render"
 	},

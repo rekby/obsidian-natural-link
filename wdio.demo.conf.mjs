@@ -29,7 +29,7 @@ export const config = {
 	},
 	waitforInterval: 250,
 	waitforTimeout: 20000,
-	logLevel: "warn",
+	logLevel: "info",
 	injectGlobals: false,
 	cacheDir,
 };
