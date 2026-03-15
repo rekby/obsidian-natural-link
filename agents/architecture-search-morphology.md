@@ -10,7 +10,7 @@ For persistence details see `agents/architecture-data-storage.md`.
 - `src/stemming/russian-stemmer.ts`: Russian Snowball stemming with `ё -> е` plus consonant alternation normalization (`г/д/з/ж`, `к/т/ц/ч`, `х/с/ш`, `ст/ск/щ`, `б/бл`, `п/пл`, `в/вл`, `м/мл`, `ф/фл`)
 - `src/stemming/russian-base-stem.ts`: extracted Russian base stemming primitives used both at runtime and in dictionary generation filters
 - `src/stemming/english-stemmer.ts`: English Snowball stemming
-- `src/stemming/irregular-forms.ts`: `IrregularFormsLookup`, shared irregular dictionary logic with stem-level matching and prefix lookup for incomplete last token
+- `src/stemming/irregular-forms.ts`: `IrregularFormsLookup`, shared irregular dictionary logic with stem-level matching and prefix lookup for incomplete last token; prefix canonical lookups are cached (bounded FIFO, max 1024 entries) per lookup instance
 - `src/stemming/english-irregular-forms.ts`: English irregular dictionary (`irregular -> canonical`)
 - `src/stemming/russian-irregular-forms.ts`: Russian irregular dictionary (`irregular -> canonical`)
 - `src/stemming/multi-stemmer.ts`: combines enabled stemmers and deduplicates stems
@@ -65,8 +65,12 @@ Before `NotesIndex` is built, `collectNotes()` in `src/main.ts` calls `collectLi
 `NotesIndex` is built from `NoteInfo[]` and `Stemmer`. It encapsulates:
 - tokenization and normalization;
 - stem-level matching strategy;
-- prefix handling for incomplete final token;
+- prefix handling for incomplete final token (`stemPrefix` and `stem` of the last token are computed once per `search()` call, not per note);
 - ranking logic.
+
+## Inline suggest session caching
+
+`NaturalLinkSuggest` (EditorSuggest) reuses a single `LinkSuggestCore` with a pre-built `NotesIndex` for the duration of the active `[[` suggest session. The core, stemmer, and index are built once when the first `getSuggestions` call fires and released when the session ends (`onTrigger` returns null, or `selectSuggestion` runs). This avoids reconstructing the irregular-form dictionaries and note index on every keystroke.
 
 ## Recency integration
 

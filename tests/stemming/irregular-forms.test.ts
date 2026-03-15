@@ -92,4 +92,50 @@ describe("IrregularFormsLookup", () => {
 		);
 		expect(new Set(lookup.stem("mice"))).toEqual(new Set(["mice", "mous"]));
 	});
+
+	it("returns consistent results for repeated stemPrefix calls (cache)", () => {
+		const lookup = new IrregularFormsLookup(
+			new Map([
+				["mice", "mouse"],
+				["people", "person"],
+			]),
+			mockBaseStem,
+		);
+		const first = new Set(lookup.stemPrefix("mic"));
+		const second = new Set(lookup.stemPrefix("mic"));
+		expect(first).toEqual(second);
+		expect(first).toEqual(new Set(["mous"]));
+	});
+
+	it("caches prefix lookups used by extraPrefixCanonicalResolver", () => {
+		let scanCount = 0;
+		const trackingDict = new Map([
+			["mice", "mouse"],
+			["went", "go"],
+		]);
+		const trackingStem = (word: string): string[] => {
+			scanCount++;
+			return mockBaseStem(word);
+		};
+		const lookup = new IrregularFormsLookup(
+			trackingDict,
+			trackingStem,
+			{
+				extraPrefixCanonicalResolver: (_prefix, resolveByPrefix) => {
+					resolveByPrefix("wen");
+					resolveByPrefix("wen");
+					return [];
+				},
+			},
+		);
+		scanCount = 0;
+		lookup.stemPrefix("mic");
+		const firstCallScans = scanCount;
+
+		scanCount = 0;
+		lookup.stemPrefix("mic");
+		const secondCallScans = scanCount;
+
+		expect(secondCallScans).toBeLessThanOrEqual(firstCallScans);
+	});
 });

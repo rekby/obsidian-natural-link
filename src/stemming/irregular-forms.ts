@@ -14,22 +14,30 @@ export type IrregularLookupOptions = {
 };
 
 const MIN_PREFIX_LENGTH = 3;
+const MAX_PREFIX_CACHE_SIZE = 1024;
 
 /**
  * Maps irregular forms to canonical forms and provides stem-time lookups.
  * Stem-level mapping lets one dictionary entry cover inflected forms
  * that share the same stem with the irregular key.
  */
+
 export class IrregularFormsLookup {
 	private readonly stemToCanonicals: Map<string, Set<string>>;
+	private readonly prefixCanonicalCache = new Map<string, ReadonlySet<string>>();
+	private readonly sortedKeys: string[];
+	private readonly keyToCanonical: Map<string, string>;
 
 	constructor(
-		private readonly dictionary: ReadonlyMap<string, string>,
+		dictionary: ReadonlyMap<string, string>,
 		private readonly baseStem: BaseStemFn,
 		private readonly options: IrregularLookupOptions = {},
 	) {
+		this.keyToCanonical = new Map(dictionary);
+		this.sortedKeys = [...dictionary.keys()].sort();
+
 		this.stemToCanonicals = new Map();
-		for (const [irregular, canonical] of this.dictionary) {
+		for (const [irregular, canonical] of dictionary) {
 			for (const stem of this.baseStem(irregular)) {
 				const canonicals = this.stemToCanonicals.get(stem);
 				if (!canonicals) {
@@ -56,20 +64,20 @@ export class IrregularFormsLookup {
 		if (prefix.length < MIN_PREFIX_LENGTH) {
 			return [];
 		}
-		const canonicalWords = this.resolveCanonicalsByPrefix(prefix);
+		const stems = new Set<string>();
+		for (const canonical of this.resolveCanonicalsByPrefix(prefix)) {
+			for (const canonicalStem of this.baseStem(canonical)) {
+				stems.add(canonicalStem);
+			}
+		}
 		if (this.options.extraPrefixCanonicalResolver) {
 			for (const canonical of this.options.extraPrefixCanonicalResolver(
 				prefix,
 				(innerPrefix) => this.resolveCanonicalsByPrefix(innerPrefix),
 			)) {
-				canonicalWords.add(canonical);
-			}
-		}
-
-		const stems = new Set<string>();
-		for (const canonical of canonicalWords) {
-			for (const canonicalStem of this.baseStem(canonical)) {
-				stems.add(canonicalStem);
+				for (const canonicalStem of this.baseStem(canonical)) {
+					stems.add(canonicalStem);
+				}
 			}
 		}
 		return [...stems];
@@ -108,14 +116,38 @@ export class IrregularFormsLookup {
 		return canonicals;
 	}
 
-	private resolveCanonicalsByPrefix(prefix: string): Set<string> {
+	private resolveCanonicalsByPrefix(prefix: string): ReadonlySet<string> {
+		const cached = this.prefixCanonicalCache.get(prefix);
+		if (cached) return cached;
+
 		const canonicals = new Set<string>();
-		for (const [irregular, canonical] of this.dictionary) {
-			if (!irregular.startsWith(prefix) || irregular === prefix) {
-				continue;
-			}
-			canonicals.add(canonical);
+		const keys = this.sortedKeys;
+
+		let lo = 0;
+		let hi = keys.length;
+		while (lo < hi) {
+			const mid = (lo + hi) >>> 1;
+			if (keys[mid]! < prefix) lo = mid + 1;
+			else hi = mid;
 		}
+		while (lo < keys.length && keys[lo]!.startsWith(prefix)) {
+			const key = keys[lo]!;
+			if (key !== prefix) {
+				const canonical = this.keyToCanonical.get(key);
+				if (canonical !== undefined) {
+					canonicals.add(canonical);
+				}
+			}
+			lo++;
+		}
+
+		if (this.prefixCanonicalCache.size >= MAX_PREFIX_CACHE_SIZE) {
+			const first = this.prefixCanonicalCache.keys().next();
+			if (!first.done) {
+				this.prefixCanonicalCache.delete(first.value);
+			}
+		}
+		this.prefixCanonicalCache.set(prefix, canonicals);
 		return canonicals;
 	}
 }

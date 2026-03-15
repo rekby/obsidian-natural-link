@@ -7,6 +7,7 @@ import {
 	TFile,
 } from "obsidian";
 import type NaturalLinkPlugin from "../main";
+import { NotesIndex } from "../search/notes-index";
 import { LinkSuggestion } from "../types";
 import { LinkSuggestCore } from "./link-suggest-core";
 import { parseQuery } from "./query-parser";
@@ -47,16 +48,25 @@ export class NaturalLinkSuggest extends EditorSuggest<LinkSuggestion> {
 		editor: Editor,
 		_file: TFile | null,
 	): EditorSuggestTriggerInfo | null {
-		if (!this.plugin.settings.inlineLinkSuggest) return null;
+		if (!this.plugin.settings.inlineLinkSuggest) {
+			this.activeCore = null;
+			return null;
+		}
 
 		const line = editor.getLine(cursor.line);
 		const textBefore = line.substring(0, cursor.ch);
 
 		const bracketIdx = textBefore.lastIndexOf("[[");
-		if (bracketIdx === -1) return null;
+		if (bracketIdx === -1) {
+			this.activeCore = null;
+			return null;
+		}
 
 		const between = textBefore.substring(bracketIdx + 2);
-		if (between.includes("]]")) return null;
+		if (between.includes("]]")) {
+			this.activeCore = null;
+			return null;
+		}
 
 		return {
 			start: { line: cursor.line, ch: bracketIdx + 2 },
@@ -66,7 +76,7 @@ export class NaturalLinkSuggest extends EditorSuggest<LinkSuggestion> {
 	}
 
 	async getSuggestions(context: EditorSuggestContext): Promise<LinkSuggestion[]> {
-		const core = this.buildCore();
+		const core = this.getOrBuildCore();
 		this.activeCore = core;
 		const parsed = parseQuery(context.query);
 		const hasSubLink = parsed.headingPart !== undefined || parsed.blockPart !== undefined;
@@ -82,7 +92,7 @@ export class NaturalLinkSuggest extends EditorSuggest<LinkSuggestion> {
 	}
 
 	renderSuggestion(item: LinkSuggestion, el: HTMLElement): void {
-		const core = this.activeCore ?? this.buildCore();
+		const core = this.activeCore ?? this.getOrBuildCore();
 		core.renderSuggestion(item, el);
 	}
 
@@ -90,7 +100,7 @@ export class NaturalLinkSuggest extends EditorSuggest<LinkSuggestion> {
 		const ctx = this.context;
 		if (!ctx) return;
 
-		const core = this.activeCore ?? this.buildCore();
+		const core = this.activeCore ?? this.getOrBuildCore();
 		const asTyped = evt instanceof KeyboardEvent && evt.shiftKey;
 		const isTab = evt instanceof KeyboardEvent && evt.key === "Tab";
 		const withoutDisplay = isTab === this.plugin.settings.swapEnterAndTab;
@@ -114,13 +124,18 @@ export class NaturalLinkSuggest extends EditorSuggest<LinkSuggestion> {
 
 	// ----- Private -----
 
-	private buildCore(): LinkSuggestCore {
+	private getOrBuildCore(): LinkSuggestCore {
+		if (this.activeCore) return this.activeCore;
+		const notes = this.plugin.collectNotes();
+		const stemmer = this.plugin.createStemmer();
+		const index = new NotesIndex(notes, stemmer);
 		return new LinkSuggestCore({
 			app: this.plugin.app,
 			collectNotes: () => this.plugin.collectNotes(),
-			stemmer: this.plugin.createStemmer(),
+			stemmer,
 			recentNotes: this.plugin.recentNotes,
 			showBoostReasonHint: this.plugin.settings.showBoostReasonHint,
+			prebuiltIndex: index,
 		});
 	}
 
@@ -159,7 +174,7 @@ export class NaturalLinkSuggest extends EditorSuggest<LinkSuggestion> {
 		const raw = ctx.query.trim();
 		if (raw.length === 0) return;
 
-		const core = this.buildCore();
+		const core = this.activeCore ?? this.getOrBuildCore();
 		const { end } = this.resolveEditingContext(ctx);
 		const link = core.buildRawLink(ctx.query);
 		this.replaceRange(ctx.editor, ctx.start, end, link);

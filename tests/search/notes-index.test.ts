@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { NotesIndex } from "../../src/search/notes-index";
-import { NoteInfo } from "../../src/types";
+import { NoteInfo, Stemmer } from "../../src/types";
 import { RussianStemmer } from "../../src/stemming/russian-stemmer";
 import { EnglishStemmer } from "../../src/stemming/english-stemmer";
 import { MultiStemmer } from "../../src/stemming/multi-stemmer";
@@ -236,6 +236,54 @@ describe("NotesIndex", () => {
 			const results = index.search("outwen");
 			expect(results.length).toBe(1);
 			expect(results[0]!.note.title).toBe("Outgo");
+		});
+	});
+
+	describe("stemPrefix call count", () => {
+		function makeStemPrefixSpy() {
+			let count = 0;
+			const spyStemmer: Stemmer = {
+				stem: (w: string) => stemmer.stem(w),
+				stemPrefix: (prefix: string) => {
+					count++;
+					return stemmer.stemPrefix
+						? stemmer.stemPrefix(prefix)
+						: [];
+				},
+			};
+			return {
+				spyStemmer,
+				get count() { return count; },
+				reset() { count = 0; },
+			};
+		}
+
+		it("calls stemPrefix at most once per search regardless of note count", () => {
+			const spy = makeStemPrefixSpy();
+			const notes = Array.from({ length: 50 }, (_, i) =>
+				makeNote(`Note ${i}`, [`Alias ${i}`]),
+			);
+			const index = new NotesIndex(notes, spy.spyStemmer);
+
+			spy.reset();
+			index.search("mic");
+			expect(spy.count).toBe(1);
+
+			spy.reset();
+			index.search("outwen");
+			expect(spy.count).toBe(1);
+		});
+
+		it("does not call stemPrefix for completed words (non-last tokens)", () => {
+			const spy = makeStemPrefixSpy();
+			const notes = Array.from({ length: 20 }, (_, i) =>
+				makeNote(`Note ${i}`),
+			);
+			const index = new NotesIndex(notes, spy.spyStemmer);
+
+			spy.reset();
+			index.search("hello world test");
+			expect(spy.count).toBe(1);
 		});
 	});
 
