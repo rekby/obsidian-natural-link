@@ -8,10 +8,6 @@ import {
 	waitForPlugin,
 	updatePluginSettings,
 	getPluginSetting,
-	openScratchFile,
-	resetToScratchFile,
-	readFile,
-	restoreFile,
 	setEditorText,
 	getEditorText,
 	focusEditor,
@@ -26,7 +22,8 @@ import {
 	waitForEditorText,
 	waitForBlockId,
 	waitForModalClosed,
-	dismissModalIfOpen,
+	initVaultSnapshot,
+	resetVault,
 } from "./helpers.mjs";
 
 const DEFAULT_SETTINGS = {
@@ -36,22 +33,15 @@ const DEFAULT_SETTINGS = {
 	inlineLinkSuggest: false,
 };
 
-const SOURDOUGH_FILE = "Sourdough starter.md";
-let originalSourdough;
-
 describe("Natural link real Obsidian flows", function () {
 	before(async function () {
 		await browser.reloadObsidian({ vault: TEST_VAULT });
 		await waitForPlugin();
-		originalSourdough = await readFile(SOURDOUGH_FILE);
-		await openScratchFile();
+		await initVaultSnapshot();
 	});
 
 	beforeEach(async function () {
-		await dismissModalIfOpen();
-		await restoreFile(SOURDOUGH_FILE, originalSourdough);
-		await updatePluginSettings(DEFAULT_SETTINGS);
-		await resetToScratchFile();
+		await resetVault(DEFAULT_SETTINGS);
 	});
 
 	// =========================================================================
