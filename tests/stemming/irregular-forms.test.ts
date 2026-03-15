@@ -64,4 +64,32 @@ describe("IrregularFormsLookup", () => {
 		expect(lookup.stemPrefix("mice")).toEqual([]);
 		expect(lookup.stemPrefix("xyz")).toEqual([]);
 	});
+
+	it("keeps canonical stems for all colliding dictionary canonicals", () => {
+		const collisionStem = (word: string): string[] => {
+			if (word === "best" || word === "better") {
+				return ["be+cmp"];
+			}
+			return [word];
+		};
+		const lookup = new IrregularFormsLookup(
+			new Map([
+				["best", "good"],
+				["better", "well"],
+			]),
+			collisionStem,
+		);
+		expect(new Set(lookup.stem("best"))).toEqual(new Set(["be+cmp", "good", "well"]));
+	});
+
+	it("adds stems from extra canonical resolver", () => {
+		const lookup = new IrregularFormsLookup(
+			new Map(),
+			mockBaseStem,
+			{
+				extraCanonicalResolver: () => ["mouse"],
+			},
+		);
+		expect(new Set(lookup.stem("mice"))).toEqual(new Set(["mice", "mous"]));
+	});
 });

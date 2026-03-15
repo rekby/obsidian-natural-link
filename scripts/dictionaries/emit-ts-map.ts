@@ -7,6 +7,7 @@ type EmitTsMapOptions = {
 	constName: string;
 	pairs: WordPair[];
 	headerComment?: string;
+	locale?: string;
 };
 
 function escapeString(value: string): string {
@@ -18,13 +19,14 @@ export async function emitReadonlyMapTs({
 	constName,
 	pairs,
 	headerComment,
+	locale = "en",
 }: EmitTsMapOptions): Promise<void> {
 	const sortedPairs = [...pairs].sort(([leftForm, leftCanonical], [rightForm, rightCanonical]) => {
-		const byForm = leftForm.localeCompare(rightForm, "ru");
+		const byForm = leftForm.localeCompare(rightForm, locale);
 		if (byForm !== 0) {
 			return byForm;
 		}
-		return leftCanonical.localeCompare(rightCanonical, "ru");
+		return leftCanonical.localeCompare(rightCanonical, locale);
 	});
 
 	const header = headerComment ? `// ${headerComment}\n` : "";

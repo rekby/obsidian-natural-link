@@ -11,11 +11,11 @@ An Obsidian plugin that lets you create links to notes using natural word forms.
 
 ## Features
 
-- **Morphological search**: Find notes by any word form. Searching for "wooden boxes" will match a note titled "Wooden box". Russian morphology is fully supported, including consonant alternations (`друг`/`дружить`, `ходить`/`хожу`) and suppletive forms (`люди`/`человек`).
+- **Morphological search**: Find notes by any word form. Searching for "wooden boxes" will match a note titled "Wooden box". Russian morphology is fully supported, including consonant alternations (`друг`/`дружить`, `ходить`/`хожу`) and suppletive forms (`люди`/`человек`). English morphology includes Snowball stemming and irregular dictionary mappings such as `children`/`child`, `went`/`go`, and `better`/`good`.
 - **Prefix matching**: Results update as you type. Even incomplete words match — typing "wood" will find "Wooden box".
 - **Alias support**: Searches across note titles and frontmatter aliases.
 - **Word order independence**: "box wooden" finds "Wooden box".
-- **Multi-language**: Russian and English search work simultaneously. Russian morphological analysis is based on [OpenCorpora](https://opencorpora.org/) dictionary data.
+- **Multi-language**: Russian and English search work simultaneously. Russian irregular morphology is based on [OpenCorpora](https://opencorpora.org/) dictionary data, and English irregular morphology is based on WordNet 3.1 exception lists.
 - **Heading and block links**: Use `#` to link to a specific heading (`note#heading`) or `^` to link to a block (`note^text`). The plugin searches for the note first, then shows matching headings or text blocks with previews. Use `|` to set explicit display text (`note|custom text`).
 - **Tab for display-preserving completion**: Press **Tab** to accept the selected suggestion and insert a link with your typed text preserved (`[[Note|your text]]`, `[[Note#Heading|your text]]`, `[[Note#^blockId|your text]]`).
 - **Insert link as typed**: Press **Shift+Enter** to insert a link with your exact input as both target and display text, bypassing search results.
@@ -124,24 +124,32 @@ npm run demo         # Refresh README PNG screenshots and localized demo GIFs
 npm run lint         # Lint
 npm run dict:ru:suffix # Extract Russian suffix rules from OpenCorpora
 npm run dict:ru:build  # Rebuild Russian suppletive dictionary from OpenCorpora
-npm run dict:build     # Run all dictionary build pipelines (suffix rules + dictionary)
+npm run dict:en:build  # Rebuild English irregular forms dictionary from WordNet 3.1
+npm run dict:build     # Run all dictionary build pipelines (suffix rules + dictionaries)
 ```
 
 ## Dictionary sources
 
-Both Russian data files are generated from the [OpenCorpora](https://opencorpora.org/) morphological dictionary export:
+Russian data files are generated from the [OpenCorpora](https://opencorpora.org/) morphological dictionary export:
 
 - Source format: XML dictionary (`dict.opcorpora.xml.bz2`)
 - Export format description: [OpenCorpora export format](https://opencorpora.org/?page=export)
 - Download page: [OpenCorpora downloads](https://opencorpora.org/?page=downloads)
 - Source license: [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/)
 
+English irregular-form data is generated from WordNet 3.1 dictionary exception lists:
+
+- Source archive: `wn3.1.dict.tar.gz`
+- Exception files: `noun.exc`, `verb.exc`, `adj.exc`, `adv.exc`
+- Download URL: <https://wordnetcode.princeton.edu/wn3.1.dict.tar.gz>
+
 | Generated file | Contents | Regeneration command |
 |---|---|---|
 | `src/stemming/russian-suffix-rules.ts` | ~1,600 suffix-stripping rules (~64 KB) | `npm run dict:ru:suffix` |
 | `src/stemming/russian-irregular-forms.ts` | ~5,700 suppletive form→canonical pairs (~180 KB) | `npm run dict:ru:build` |
+| `src/stemming/english-irregular-forms.ts` | Irregular English form→canonical pairs from WordNet exceptions | `npm run dict:en:build` |
 
-Run `npm run dict:build` to regenerate both files. Raw downloaded archives are kept in `.cache/dictionaries/` and are not committed.
+Run `npm run dict:build` to regenerate all dictionary files. Raw downloaded archives are kept in `.cache/dictionaries/` and are not committed.
 
 ## Known limitations
 

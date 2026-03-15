@@ -223,6 +223,20 @@ describe("NotesIndex", () => {
 			expect(index.search("людей").map((r) => r.note.title)).toContain("Человек");
 			expect(index.search("человека").map((r) => r.note.title)).toContain("Люди");
 		});
+
+		it("finds prefixed irregular forms by full query", () => {
+			const index = new NotesIndex([makeNote("Outgo")], stemmer);
+			const results = index.search("outwent");
+			expect(results.length).toBe(1);
+			expect(results[0]!.note.title).toBe("Outgo");
+		});
+
+		it("finds prefixed irregular forms while typing prefix", () => {
+			const index = new NotesIndex([makeNote("Outgo")], stemmer);
+			const results = index.search("outwen");
+			expect(results.length).toBe(1);
+			expect(results[0]!.note.title).toBe("Outgo");
+		});
 	});
 
 	describe("ё normalization", () => {

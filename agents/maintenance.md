@@ -22,7 +22,9 @@ npm run demo:capture # Capture localized README demo frames in Obsidian
 npm run demo:render  # Render demo GIFs via ffmpeg
 npm run demo         # Full README screenshot + demo GIF regeneration pipeline
 npm run lint         # ESLint
+npm run dict:ru:suffix # Rebuild Russian suffix rules from OpenCorpora
 npm run dict:ru:build # Rebuild Russian irregular forms from OpenCorpora
+npm run dict:en:build # Rebuild English irregular forms from WordNet 3.1 exception lists
 npm run dict:build   # Run all dictionary generation pipelines
 ```
 
@@ -48,7 +50,9 @@ npm run dict:build   # Run all dictionary generation pipelines
 
 ## Known limitations
 
-- Irregular forms support is dictionary-based. Russian map is generated from OpenCorpora (`dict.opcorpora.xml.bz2`) via build-time scripts in `scripts/dictionaries/`.
+- Irregular forms support is dictionary-based.
+  - Russian map is generated from OpenCorpora (`dict.opcorpora.xml.bz2`) via build-time scripts in `scripts/dictionaries/`.
+  - English map is generated from WordNet 3.1 exception lists (`wn3.1.dict.tar.gz`, `*.exc`) via build-time scripts in `scripts/dictionaries/`.
 - OpenCorpora source data is licensed under CC BY-SA 3.0; keep source attribution links in README files up to date.
 - Snowball stemming plus current normalization improves many alternations, but does not cover all Russian lexical alternations (for example: `бег` / `бежать`). Full coverage requires lemmatization or semantic search.
 - No fuzzy/typo tolerance yet.

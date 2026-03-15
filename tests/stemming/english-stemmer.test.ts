@@ -46,10 +46,67 @@ describe("EnglishStemmer", () => {
 		expect(mouseStems.some((s) => miceStems.has(s))).toBe(true);
 	});
 
+	it("connects irregular noun forms from WordNet", () => {
+		const childrenStems = new Set(stemmer.stem("children"));
+		const childStems = stemmer.stem("child");
+		expect(childStems.some((s) => childrenStems.has(s))).toBe(true);
+	});
+
+	it("connects irregular verb forms from WordNet", () => {
+		const wentStems = new Set(stemmer.stem("went"));
+		const goStems = stemmer.stem("go");
+		expect(goStems.some((s) => wentStems.has(s))).toBe(true);
+	});
+
+	it("connects irregular adjective forms from WordNet", () => {
+		const betterStems = new Set(stemmer.stem("better"));
+		const goodStems = stemmer.stem("good");
+		const wellStems = stemmer.stem("well");
+		const overlapsGood = goodStems.some((s) => betterStems.has(s));
+		const overlapsWell = wellStems.some((s) => betterStems.has(s));
+		expect(overlapsGood || overlapsWell).toBe(true);
+	});
+
+	it("connects productive -ier/-iest forms through post rules", () => {
+		const happierStems = new Set(stemmer.stem("happier"));
+		const happiestStems = new Set(stemmer.stem("happiest"));
+		const happyStems = stemmer.stem("happy");
+		expect(happyStems.some((s) => happierStems.has(s))).toBe(true);
+		expect(happyStems.some((s) => happiestStems.has(s))).toBe(true);
+	});
+
+	it("connects productive latin-style plural forms through post rules", () => {
+		const cactiStems = new Set(stemmer.stem("cacti"));
+		const cactusStems = stemmer.stem("cactus");
+		expect(cactusStems.some((s) => cactiStems.has(s))).toBe(true);
+
+		const analysesStems = new Set(stemmer.stem("analyses"));
+		const analysisStems = stemmer.stem("analysis");
+		expect(analysisStems.some((s) => analysesStems.has(s))).toBe(true);
+	});
+
+	it("composes prefixed irregular forms from base irregulars", () => {
+		const outwentStems = new Set(stemmer.stem("outwent"));
+		const outgoStems = stemmer.stem("outgo");
+		expect(outgoStems.some((s) => outwentStems.has(s))).toBe(true);
+	});
+
 	it("returns canonical stems for irregular prefixes", () => {
 		const prefixStems = new Set(stemmer.stemPrefix("mic"));
 		const mouseStems = stemmer.stem("mouse");
 		expect(mouseStems.some((s) => prefixStems.has(s))).toBe(true);
+	});
+
+	it("returns canonical stems for WordNet irregular prefixes", () => {
+		const prefixStems = new Set(stemmer.stemPrefix("wen"));
+		const goStems = stemmer.stem("go");
+		expect(goStems.some((s) => prefixStems.has(s))).toBe(true);
+	});
+
+	it("returns canonical stems for prefixed irregular prefixes", () => {
+		const prefixStems = new Set(stemmer.stemPrefix("outwen"));
+		const outgoStems = stemmer.stem("outgo");
+		expect(outgoStems.some((s) => prefixStems.has(s))).toBe(true);
 	});
 
 	it("returns no prefix stems for short prefixes", () => {

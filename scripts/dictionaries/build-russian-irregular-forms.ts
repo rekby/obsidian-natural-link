@@ -316,6 +316,7 @@ export async function runRussianOpenCorporaBuild(argv = process.argv.slice(2)): 
 		targetPath: outputPath,
 		constName: RUSSIAN_MAP_CONST_NAME,
 		pairs,
+		locale: "ru",
 		headerComment:
 			"Generated from OpenCorpora dictionary export via npm run dict:ru:build. Do not edit manually.",
 	});

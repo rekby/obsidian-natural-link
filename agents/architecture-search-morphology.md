@@ -15,7 +15,9 @@ For persistence details see `agents/architecture-data-storage.md`.
 - `src/stemming/russian-irregular-forms.ts`: Russian irregular dictionary (`irregular -> canonical`)
 - `src/stemming/multi-stemmer.ts`: combines enabled stemmers and deduplicates stems
 - `scripts/dictionaries/opencorpora-source.ts`: OpenCorpora download + parser (`<lemma><l t=.../><f t=.../>`)
+- `scripts/dictionaries/wordnet-source.ts`: WordNet 3.1 dict download + parser for `*.exc` exception lists
 - `scripts/dictionaries/build-russian-irregular-forms.ts`: build-time filtering and stem-aware dedup (`form -> canonical`) before generating runtime dictionary file
+- `scripts/dictionaries/build-english-irregular-forms.ts`: build-time filtering of WordNet exceptions against English Snowball stems before generating runtime dictionary file
 - `scripts/dictionaries/emit-ts-map.ts`: deterministic TypeScript `ReadonlyMap` emitter for generated dictionaries
 - `src/search/tokenizer.ts`: word tokenization and lowercasing
 - `src/search/notes-index.ts`: index construction and query search
@@ -45,6 +47,14 @@ For persistence details see `agents/architecture-data-storage.md`.
 3. Generator normalizes lowercase + `ё -> е`, skips non-Russian and identity pairs, and drops any pair already covered by base Russian stemming (`russianBaseStem(form)` intersects `russianBaseStem(lemma)`).
 4. Remaining pairs are deduplicated by `(canonical, stem(form))` so runtime map avoids multiple keys that collapse to the same stem bucket.
 5. Final deterministic map is written to `src/stemming/russian-irregular-forms.ts`.
+
+## English dictionary generation (build-time)
+
+1. `npm run dict:en:build` downloads WordNet 3.1 dictionary archive (`wn3.1.dict.tar.gz`) into `.cache/dictionaries/wordnet/` when missing.
+2. Parser reads WordNet exception lists (`noun.exc`, `verb.exc`, `adj.exc`, `adv.exc`) and expands each line to `form -> canonical` pairs.
+3. Generator normalizes lowercase, skips identity pairs, skips non `[a-z-]` forms, and removes pairs already covered by English Snowball stemming (`stem(form) === stem(canonical)`).
+4. Remaining pairs are deduplicated by `(canonical, stem(form))` to reduce runtime map noise.
+5. Final deterministic map is written to `src/stemming/english-irregular-forms.ts`.
 
 ## Link displayText as aliases
 
