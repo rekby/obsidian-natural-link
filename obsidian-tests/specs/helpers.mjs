@@ -61,6 +61,56 @@ export async function openScratchFile() {
 	await setEditorText("");
 }
 
+export async function readFile(filePath) {
+	return browser.executeObsidian(
+		async ({ app, obsidian }, path) => {
+			const file = app.vault.getAbstractFileByPath(path);
+			if (!(file instanceof obsidian.TFile)) {
+				throw new Error(`No file ${path} exists`);
+			}
+			return app.vault.read(file);
+		},
+		filePath,
+	);
+}
+
+export async function restoreFile(filePath, content) {
+	await browser.executeObsidian(
+		async ({ app, obsidian }, path, data) => {
+			const file = app.vault.getAbstractFileByPath(path);
+			if (!(file instanceof obsidian.TFile)) {
+				throw new Error(`No file ${path} exists`);
+			}
+			await app.vault.modify(file, data);
+		},
+		filePath,
+		content,
+	);
+}
+
+export async function resetToScratchFile() {
+	await browser.executeObsidian(
+		async ({ app, obsidian }, filePath) => {
+			const file = app.vault.getAbstractFileByPath(filePath);
+			if (!(file instanceof obsidian.TFile)) {
+				throw new Error(`No file ${filePath} exists`);
+			}
+			await app.vault.modify(file, "");
+			const leaf =
+				app.workspace.getMostRecentLeaf() ?? app.workspace.getLeaf();
+			await leaf.openFile(file);
+		},
+		SCRATCH_FILE,
+	);
+	await browser.waitUntil(
+		async () => (await getEditorText()) === "",
+		{
+			timeoutMsg: "Editor was not cleared to empty",
+		},
+	);
+	await focusEditor();
+}
+
 export async function setEditorText(text) {
 	await browser.executeObsidian(
 		({ app, obsidian }, value) => {
@@ -173,7 +223,7 @@ export async function waitForBlockId(filePath, lineFragment) {
 	let matchedId = null;
 	await browser.waitUntil(
 		async () => {
-			const content = await obsidianPage.read(filePath);
+			const content = await readFile(filePath);
 			const line = content
 				.split("\n")
 				.find((candidate) => candidate.includes(lineFragment));

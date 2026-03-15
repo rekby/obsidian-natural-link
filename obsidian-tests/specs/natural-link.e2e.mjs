@@ -1,4 +1,4 @@
-/* global beforeEach, describe, it */
+/* global before, beforeEach, describe, it */
 
 import assert from "node:assert/strict";
 import { $, browser } from "@wdio/globals";
@@ -9,6 +9,9 @@ import {
 	updatePluginSettings,
 	getPluginSetting,
 	openScratchFile,
+	resetToScratchFile,
+	readFile,
+	restoreFile,
 	setEditorText,
 	getEditorText,
 	focusEditor,
@@ -23,6 +26,7 @@ import {
 	waitForEditorText,
 	waitForBlockId,
 	waitForModalClosed,
+	dismissModalIfOpen,
 } from "./helpers.mjs";
 
 const DEFAULT_SETTINGS = {
@@ -32,12 +36,22 @@ const DEFAULT_SETTINGS = {
 	inlineLinkSuggest: false,
 };
 
+const SOURDOUGH_FILE = "Sourdough starter.md";
+let originalSourdough;
+
 describe("Natural link real Obsidian flows", function () {
-	beforeEach(async function () {
+	before(async function () {
 		await browser.reloadObsidian({ vault: TEST_VAULT });
 		await waitForPlugin();
-		await updatePluginSettings(DEFAULT_SETTINGS);
+		originalSourdough = await readFile(SOURDOUGH_FILE);
 		await openScratchFile();
+	});
+
+	beforeEach(async function () {
+		await dismissModalIfOpen();
+		await restoreFile(SOURDOUGH_FILE, originalSourdough);
+		await updatePluginSettings(DEFAULT_SETTINGS);
+		await resetToScratchFile();
 	});
 
 	// =========================================================================
@@ -345,7 +359,7 @@ describe("Natural link real Obsidian flows", function () {
 			// Only the plugin's morphological search would find it.
 			await browser.keys("[[wooden boxes");
 
-			await browser.pause(1500);
+			await browser.pause(500);
 
 			const selected = await $(SELECTED_SUGGESTION_SELECTOR);
 			const isDisplayed = await selected.isDisplayed().catch(() => false);
@@ -366,7 +380,9 @@ describe("Natural link real Obsidian flows", function () {
 		it("inline heading link: [[note#prefix + Enter", async function () {
 			await updatePluginSettings({ ...DEFAULT_SETTINGS, inlineLinkSuggest: true });
 			await focusEditor();
-			await browser.keys("[[Istanbul trip#pack");
+			await browser.keys("[[Istanbul trip");
+			await expectSelectedSuggestionText("Trip to Istanbul");
+			await browser.keys("#pack");
 
 			await expectSelectedSuggestionText("Packing list");
 			await expectHeadingBadge();
@@ -381,7 +397,9 @@ describe("Natural link real Obsidian flows", function () {
 		it("inline block link: [[note^prefix + Enter writes block ID", async function () {
 			await updatePluginSettings({ ...DEFAULT_SETTINGS, inlineLinkSuggest: true });
 			await focusEditor();
-			await browser.keys("[[starter^feed");
+			await browser.keys("[[starter");
+			await expectSelectedSuggestionText("Sourdough starter");
+			await browser.keys("^feed");
 
 			await expectSelectedSuggestionText("Feed the starter");
 			await expectBlockBadge();
@@ -403,18 +421,16 @@ describe("Natural link real Obsidian flows", function () {
 		it("editing existing [[link|display]] preserves display text via Tab", async function () {
 			await updatePluginSettings({ ...DEFAULT_SETTINGS, inlineLinkSuggest: true });
 
-			// Set up: "Check [[|the box]] later" with cursor right after [[
-			// setCursorPosition via executeObsidian doesn't sync with WebDriver
-			// input context, so use keyboard Home + arrow keys to navigate.
-			// Text length: "Check [[|the box]] later" = 24 chars
-			// Target cursor position: ch 8 (right after "[[")
-			await setEditorText("Check [[|the box]] later");
-			await focusEditor();
-			await browser.keys("Home");
-			for (let i = 0; i < 8; i++) {
-				await browser.keys("ArrowRight");
-			}
-			await browser.pause(200);
+			await browser.executeObsidian(({ app, obsidian }, text, cursorPos) => {
+				const view = app.workspace.getActiveViewOfType(obsidian.MarkdownView);
+				if (!view) throw new Error("No active markdown view");
+				const cm = view.editor.cm;
+				cm.dispatch({
+					changes: { from: 0, to: cm.state.doc.length, insert: text },
+					selection: { anchor: cursorPos },
+				});
+				view.editor.focus();
+			}, "Check [[|the box]] later", 8);
 			await browser.keys("wooden");
 
 			await expectSelectedSuggestionText("Wooden box");
