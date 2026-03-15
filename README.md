@@ -13,7 +13,7 @@ An Obsidian plugin that lets you create links to notes using natural word forms.
 
 - **Morphological search**: Find notes by any word form. Searching for "wooden boxes" will match a note titled "Wooden box". Russian morphology is fully supported, including consonant alternations (`друг`/`дружить`, `ходить`/`хожу`) and suppletive forms (`люди`/`человек`). English morphology includes Snowball stemming and irregular dictionary mappings such as `children`/`child`, `went`/`go`, and `better`/`good`.
 - **Prefix matching**: Results update as you type. Even incomplete words match — typing "wood" will find "Wooden box".
-- **Alias support**: Searches across note titles and frontmatter aliases.
+- **Alias support**: Searches across note titles, frontmatter aliases, and display texts from wikilinks. If any note in the vault links to another with explicit display text (`[[Note|custom text]]`), that display text is automatically treated as an alias for the target note.
 - **Word order independence**: "box wooden" finds "Wooden box".
 - **Multi-language**: Russian and English search work simultaneously. Russian morphological analysis is based on [OpenCorpora](https://opencorpora.org/) dictionary data, English — on [WordNet](https://wordnet.princeton.edu/) exception lists.
 - **Heading and block links**: Use `#` to link to a specific heading (`note#heading`) or `^` to link to a block (`note^text`). The plugin searches for the note first, then shows matching headings or text blocks with previews. Use `|` to set explicit display text (`note|custom text`).
