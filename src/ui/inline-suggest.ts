@@ -9,9 +9,6 @@ import {
 import type NaturalLinkPlugin from "../main";
 import { NotesIndex } from "../search/notes-index";
 import { MAX_BOOST_COUNT } from "../search/recent-notes";
-import { MultiStemmer } from "../stemming/multi-stemmer";
-import { RussianStemmer } from "../stemming/russian-stemmer";
-import { EnglishStemmer } from "../stemming/english-stemmer";
 import { SearchResult } from "../types";
 import { renderSearchResult } from "./result-renderer";
 
@@ -73,7 +70,7 @@ export class NaturalLinkSuggest extends EditorSuggest<SearchResult> {
 		}
 
 		const notes = this.plugin.collectNotes();
-		const stemmer = new MultiStemmer([new RussianStemmer(), new EnglishStemmer()]);
+		const stemmer = this.plugin.createStemmer();
 		const index = new NotesIndex(notes, stemmer);
 		const results = index.search(query);
 		return this.plugin.recentNotes.boostRecent(

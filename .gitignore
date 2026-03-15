@@ -18,6 +18,7 @@ main.js
 # obsidian
 data.json
 .obsidian-cache
+.cache/dictionaries
 obsidian-tests/demo-artifacts
 
 # Exclude macOS Finder (System Explorer) View States

@@ -15,6 +15,7 @@ export default tseslint.config(
 						'eslint.config.js',
 						'manifest.json',
 						'tests/*/*.ts',
+						'scripts/*/*.ts',
 					],
 					maximumDefaultProjectFileMatchCount_THIS_WILL_SLOW_DOWN_LINTING: 20,
 				},
@@ -30,6 +31,24 @@ export default tseslint.config(
 		rules: {
 			"obsidianmd/ui/sentence-case-locale-module": "error",
 		}
+	},
+	{
+		files: ["scripts/**/*.ts"],
+		languageOptions: {
+			globals: {
+				...globals.node,
+			},
+		},
+		rules: {
+			"import/no-nodejs-modules": "off",
+			"no-console": "off",
+			"no-restricted-globals": "off",
+			"no-undef": "off",
+			"@typescript-eslint/only-throw-error": "off",
+			"@typescript-eslint/no-unsafe-assignment": "off",
+			"@typescript-eslint/no-unsafe-call": "off",
+			"@typescript-eslint/no-unsafe-argument": "off",
+		},
 	},
 	globalIgnores([
 		"node_modules",

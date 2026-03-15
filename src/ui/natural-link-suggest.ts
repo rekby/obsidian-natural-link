@@ -7,9 +7,6 @@ import {
 	TFile,
 } from "obsidian";
 import type NaturalLinkPlugin from "../main";
-import { MultiStemmer } from "../stemming/multi-stemmer";
-import { RussianStemmer } from "../stemming/russian-stemmer";
-import { EnglishStemmer } from "../stemming/english-stemmer";
 import { LinkSuggestion } from "../types";
 import { LinkSuggestCore } from "./link-suggest-core";
 import { parseQuery } from "./query-parser";
@@ -121,7 +118,7 @@ export class NaturalLinkSuggest extends EditorSuggest<LinkSuggestion> {
 		return new LinkSuggestCore({
 			app: this.plugin.app,
 			collectNotes: () => this.plugin.collectNotes(),
-			stemmer: new MultiStemmer([new RussianStemmer(), new EnglishStemmer()]),
+			stemmer: this.plugin.createStemmer(),
 			recentNotes: this.plugin.recentNotes,
 			showBoostReasonHint: this.plugin.settings.showBoostReasonHint,
 		});

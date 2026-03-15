@@ -2,6 +2,8 @@ import { App, PluginSettingTab, Setting } from "obsidian";
 import type NaturalLinkPlugin from "./main";
 import { t } from "./i18n";
 
+export type RussianStemmerMode = "both" | "suffix" | "snowball";
+
 export interface NaturalLinkSettings {
 	/** Schema version for future migrations */
 	version: number;
@@ -13,6 +15,8 @@ export interface NaturalLinkSettings {
 	swapEnterAndTab: boolean;
 	/** Show small reason hint for context-boosted note suggestions */
 	showBoostReasonHint: boolean;
+	/** Russian stemmer strategy: suffix rules, Snowball, or both combined */
+	russianStemmerMode: RussianStemmerMode;
 }
 
 export const DEFAULT_SETTINGS: NaturalLinkSettings = {
@@ -21,6 +25,7 @@ export const DEFAULT_SETTINGS: NaturalLinkSettings = {
 	inlineLinkSuggest: false,
 	swapEnterAndTab: false,
 	showBoostReasonHint: false,
+	russianStemmerMode: "both",
 };
 
 export class NaturalLinkSettingTab extends PluginSettingTab {
@@ -79,6 +84,21 @@ export class NaturalLinkSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.showBoostReasonHint)
 					.onChange(async (value) => {
 						this.plugin.settings.showBoostReasonHint = value;
+						await this.plugin.saveSettings();
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName(t("settings.russian-stemmer-mode"))
+			.setDesc(t("settings.russian-stemmer-mode-description"))
+			.addDropdown((dropdown) =>
+				dropdown
+					.addOption("both", t("settings.russian-stemmer-mode.both"))
+					.addOption("suffix", t("settings.russian-stemmer-mode.suffix"))
+					.addOption("snowball", t("settings.russian-stemmer-mode.snowball"))
+					.setValue(this.plugin.settings.russianStemmerMode)
+					.onChange(async (value) => {
+						this.plugin.settings.russianStemmerMode = value as RussianStemmerMode;
 						await this.plugin.saveSettings();
 					}),
 			);

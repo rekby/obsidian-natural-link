@@ -8,8 +8,11 @@ import { RecentNotes } from "./search/recent-notes";
 import { MultiStemmer } from "./stemming/multi-stemmer";
 import { RussianStemmer } from "./stemming/russian-stemmer";
 import { EnglishStemmer } from "./stemming/english-stemmer";
+import { russianSnowballStem } from "./stemming/russian-base-stem";
+import { russianSuffixStem } from "./stemming/russian-suffix-stem";
+import { BaseStemFn } from "./stemming/irregular-forms";
 import { addLinkDisplayAliases, LinkDisplay } from "./search/link-aliases";
-import { NoteInfo } from "./types";
+import { NoteInfo, Stemmer } from "./types";
 import { t } from "./i18n";
 
 export default class NaturalLinkPlugin extends Plugin {
@@ -81,11 +84,35 @@ export default class NaturalLinkPlugin extends Plugin {
 		}
 	}
 
+	// ----- Stemmer -----
+
+	createRussianBaseStem(): BaseStemFn {
+		switch (this.settings.russianStemmerMode) {
+			case "both":
+				return (word) => {
+					const suffixStems = russianSuffixStem(word);
+					const snowballStems = russianSnowballStem(word);
+					return [...new Set([...suffixStems, ...snowballStems])];
+				};
+			case "suffix":
+				return russianSuffixStem;
+			case "snowball":
+				return russianSnowballStem;
+		}
+	}
+
+	createStemmer(): Stemmer {
+		return new MultiStemmer([
+			new RussianStemmer(this.createRussianBaseStem()),
+			new EnglishStemmer(),
+		]);
+	}
+
 	// ----- Modal -----
 
 	private openNaturalLinkModal(editor: Editor): void {
 		const notes = this.collectNotes();
-		const stemmer = new MultiStemmer([new RussianStemmer(), new EnglishStemmer()]);
+		const stemmer = this.createStemmer();
 		const index = new NotesIndex(notes, stemmer);
 
 		const core = new LinkSuggestCore({

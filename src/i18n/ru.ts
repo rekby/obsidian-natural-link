@@ -41,4 +41,11 @@ export const ru: Partial<typeof en> = {
 		"Показывать причину контекстного буста",
 	"settings.show-boost-reason-hint-description":
 		"Показывать маленькую серую подсказку в списке, почему заметка получила контекстный буст",
+	"settings.russian-stemmer-mode":
+		"Режим русского стеммера",
+	"settings.russian-stemmer-mode-description":
+		"Выберите способ стемминга русских слов. «Оба» объединяет суффиксные правила и Snowball для максимального охвата. «Суффиксные правила» — только суффиксные правила (лучшая точность). «Snowball» — только классический Snowball.",
+	"settings.russian-stemmer-mode.both": "Оба (рекомендуется)",
+	"settings.russian-stemmer-mode.suffix": "Только суффиксные правила",
+	"settings.russian-stemmer-mode.snowball": "Только Snowball",
 };

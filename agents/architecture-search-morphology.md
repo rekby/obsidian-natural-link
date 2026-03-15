@@ -8,11 +8,15 @@ For persistence details see `agents/architecture-data-storage.md`.
 
 - `src/types.ts` (`Stemmer`): `stem(word: string): string[]`, optional `stemPrefix(prefix: string): string[]`
 - `src/stemming/russian-stemmer.ts`: Russian Snowball stemming with `ё -> е` plus consonant alternation normalization (`г/д/з/ж`, `к/т/ц/ч`, `х/с/ш`, `ст/ск/щ`, `б/бл`, `п/пл`, `в/вл`, `м/мл`, `ф/фл`)
+- `src/stemming/russian-base-stem.ts`: extracted Russian base stemming primitives used both at runtime and in dictionary generation filters
 - `src/stemming/english-stemmer.ts`: English Snowball stemming
 - `src/stemming/irregular-forms.ts`: `IrregularFormsLookup`, shared irregular dictionary logic with stem-level matching and prefix lookup for incomplete last token
 - `src/stemming/english-irregular-forms.ts`: English irregular dictionary (`irregular -> canonical`)
 - `src/stemming/russian-irregular-forms.ts`: Russian irregular dictionary (`irregular -> canonical`)
 - `src/stemming/multi-stemmer.ts`: combines enabled stemmers and deduplicates stems
+- `scripts/dictionaries/opencorpora-source.ts`: OpenCorpora download + parser (`<lemma><l t=.../><f t=.../>`)
+- `scripts/dictionaries/build-russian-irregular-forms.ts`: build-time filtering and stem-aware dedup (`form -> canonical`) before generating runtime dictionary file
+- `scripts/dictionaries/emit-ts-map.ts`: deterministic TypeScript `ReadonlyMap` emitter for generated dictionaries
 - `src/search/tokenizer.ts`: word tokenization and lowercasing
 - `src/search/notes-index.ts`: index construction and query search
 - `src/search/recent-notes.ts`: recency boost source used after search
@@ -33,6 +37,14 @@ For persistence details see `agents/architecture-data-storage.md`.
    - query match ratio (`0.5`)
    - source specificity (`0.4`)
    - title bonus (`0.1`)
+
+## Russian dictionary generation (build-time)
+
+1. `npm run dict:ru:build` downloads OpenCorpora export archive (`dict.opcorpora.xml.bz2`) into `.cache/dictionaries/opencorpora/` when missing.
+2. Parser extracts `form -> lemma` pairs from each `lemma` entry in XML.
+3. Generator normalizes lowercase + `ё -> е`, skips non-Russian and identity pairs, and drops any pair already covered by base Russian stemming (`russianBaseStem(form)` intersects `russianBaseStem(lemma)`).
+4. Remaining pairs are deduplicated by `(canonical, stem(form))` so runtime map avoids multiple keys that collapse to the same stem bucket.
+5. Final deterministic map is written to `src/stemming/russian-irregular-forms.ts`.
 
 ## Link displayText as aliases
 

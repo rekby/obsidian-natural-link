@@ -36,4 +36,11 @@ export const en = {
 		"Show context boost reason hint",
 	"settings.show-boost-reason-hint-description":
 		"Show a small gray hint in suggestions explaining why a note received context boost",
+	"settings.russian-stemmer-mode":
+		"Russian stemmer mode",
+	"settings.russian-stemmer-mode-description":
+		"Select the algorithm used to reduce russian words to their base forms for search matching",
+	"settings.russian-stemmer-mode.both": "Both (recommended)",
+	"settings.russian-stemmer-mode.suffix": "Suffix rules only",
+	"settings.russian-stemmer-mode.snowball": "Snowball only",
 };

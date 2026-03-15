@@ -4,12 +4,18 @@ import { NoteInfo } from "../../src/types";
 import { RussianStemmer } from "../../src/stemming/russian-stemmer";
 import { EnglishStemmer } from "../../src/stemming/english-stemmer";
 import { MultiStemmer } from "../../src/stemming/multi-stemmer";
+import { russianSnowballStem } from "../../src/stemming/russian-base-stem";
+import { russianSuffixStem } from "../../src/stemming/russian-suffix-stem";
 
 function makeNote(title: string, aliases: string[] = []): NoteInfo {
 	return { path: `${title}.md`, title, aliases };
 }
 
-const stemmer = new MultiStemmer([new RussianStemmer(), new EnglishStemmer()]);
+function combinedBaseStem(word: string): string[] {
+	return [...new Set([...russianSuffixStem(word), ...russianSnowballStem(word)])];
+}
+
+const stemmer = new MultiStemmer([new RussianStemmer(combinedBaseStem), new EnglishStemmer()]);
 
 describe("NotesIndex", () => {
 	describe("exact match", () => {
