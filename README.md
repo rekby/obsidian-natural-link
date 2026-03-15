@@ -15,7 +15,7 @@ An Obsidian plugin that lets you create links to notes using natural word forms.
 - **Prefix matching**: Results update as you type. Even incomplete words match — typing "wood" will find "Wooden box".
 - **Alias support**: Searches across note titles and frontmatter aliases.
 - **Word order independence**: "box wooden" finds "Wooden box".
-- **Multi-language**: Russian and English search work simultaneously. Russian irregular morphology is based on [OpenCorpora](https://opencorpora.org/) dictionary data, and English irregular morphology is based on WordNet 3.1 exception lists.
+- **Multi-language**: Russian and English search work simultaneously. Russian morphological analysis is based on [OpenCorpora](https://opencorpora.org/) dictionary data, English — on [WordNet](https://wordnet.princeton.edu/) exception lists.
 - **Heading and block links**: Use `#` to link to a specific heading (`note#heading`) or `^` to link to a block (`note^text`). The plugin searches for the note first, then shows matching headings or text blocks with previews. Use `|` to set explicit display text (`note|custom text`).
 - **Tab for display-preserving completion**: Press **Tab** to accept the selected suggestion and insert a link with your typed text preserved (`[[Note|your text]]`, `[[Note#Heading|your text]]`, `[[Note#^blockId|your text]]`).
 - **Insert link as typed**: Press **Shift+Enter** to insert a link with your exact input as both target and display text, bypassing search results.
@@ -130,24 +130,10 @@ npm run dict:build     # Run all dictionary build pipelines (suffix rules + dict
 
 ## Dictionary sources
 
-Russian data files are generated from the [OpenCorpora](https://opencorpora.org/) morphological dictionary export:
+Morphological dictionaries are generated from open data at build time:
 
-- Source format: XML dictionary (`dict.opcorpora.xml.bz2`)
-- Export format description: [OpenCorpora export format](https://opencorpora.org/?page=export)
-- Download page: [OpenCorpora downloads](https://opencorpora.org/?page=downloads)
-- Source license: [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/)
-
-English irregular-form data is generated from WordNet 3.1 dictionary exception lists:
-
-- Source archive: `wn3.1.dict.tar.gz`
-- Exception files: `noun.exc`, `verb.exc`, `adj.exc`, `adv.exc`
-- Download URL: <https://wordnetcode.princeton.edu/wn3.1.dict.tar.gz>
-
-| Generated file | Contents | Regeneration command |
-|---|---|---|
-| `src/stemming/russian-suffix-rules.ts` | ~1,600 suffix-stripping rules (~64 KB) | `npm run dict:ru:suffix` |
-| `src/stemming/russian-irregular-forms.ts` | ~5,700 suppletive form→canonical pairs (~180 KB) | `npm run dict:ru:build` |
-| `src/stemming/english-irregular-forms.ts` | Irregular English form→canonical pairs from WordNet exceptions | `npm run dict:en:build` |
+- **Russian**: [OpenCorpora](https://opencorpora.org/) (license: [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/))
+- **English**: [WordNet](https://wordnet.princeton.edu/)
 
 Run `npm run dict:build` to regenerate all dictionary files. Raw downloaded archives are kept in `.cache/dictionaries/` and are not committed.
 
