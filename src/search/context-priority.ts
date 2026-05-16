@@ -72,20 +72,15 @@ export function selectOpenTop(
 	}).workspace;
 	if (!workspace?.getLeavesOfType) return [];
 
-	const workspaceApi = workspace as {
-		getMostRecentLeaf?: () => unknown;
-		getLeavesOfType?: (viewType: string) => unknown[];
-	};
-
 	const titles: string[] = [];
 
-	const mostRecentLeaf = workspaceApi.getMostRecentLeaf?.();
+	const mostRecentLeaf = workspace.getMostRecentLeaf?.();
 	const mostRecentTitle = getLeafTitle(mostRecentLeaf ?? null);
 	if (mostRecentTitle && relevantTitles.has(mostRecentTitle)) {
 		titles.push(mostRecentTitle);
 	}
 
-	const openLeaves = workspaceApi.getLeavesOfType?.("markdown") ?? [];
+	const openLeaves = workspace.getLeavesOfType?.("markdown") ?? [];
 	for (const leaf of openLeaves) {
 		const title = getLeafTitle(leaf);
 		if (!title || !relevantTitles.has(title)) continue;

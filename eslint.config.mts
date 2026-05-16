@@ -1,36 +1,52 @@
-import tseslint from 'typescript-eslint';
+import tsparser from "@typescript-eslint/parser";
+import { defineConfig, globalIgnores } from "eslint/config";
 import obsidianmd from "eslint-plugin-obsidianmd";
 import globals from "globals";
-import { globalIgnores } from "eslint/config";
 
-export default tseslint.config(
+// Rules from eslint-plugin-obsidianmd that need TypeScript type information.
+// They must be disabled on non-TS files (package.json, etc.) to avoid
+// "rule requires type information" parser errors.
+const obsidianTypedRules = [
+	"obsidianmd/no-plugin-as-component",
+	"obsidianmd/no-view-references-in-plugin",
+	"obsidianmd/no-unsupported-api",
+	"obsidianmd/prefer-file-manager-trash-file",
+	"obsidianmd/prefer-instanceof",
+];
+const disableObsidianTypedRules = Object.fromEntries(
+	obsidianTypedRules.map((name) => [name, "off"]),
+);
+
+export default defineConfig([
+	globalIgnores([
+		"node_modules",
+		"dist",
+		"main.js",
+		"esbuild.config.mjs",
+		"version-bump.mjs",
+		"vitest.config.ts",
+		"wdio.conf.mjs",
+		"wdio.demo.conf.mjs",
+		"obsidian-tests",
+		"versions.json",
+		"data.json",
+		"package-lock.json",
+		"tsconfig.json",
+		"tsconfig.eslint.json",
+		".claude",
+		".obsidian-cache",
+	]),
+	...obsidianmd.configs.recommendedWithLocalesEn,
 	{
+		files: ["**/*.ts", "**/*.tsx", "manifest.json"],
 		languageOptions: {
-			globals: {
-				...globals.browser,
-			},
+			parser: tsparser,
 			parserOptions: {
-				projectService: {
-					allowDefaultProject: [
-						'eslint.config.js',
-						'manifest.json',
-						'tests/*/*.ts',
-						'scripts/*/*.ts',
-					],
-					maximumDefaultProjectFileMatchCount_THIS_WILL_SLOW_DOWN_LINTING: 100,
-				},
+				project: "./tsconfig.eslint.json",
 				tsconfigRootDir: import.meta.dirname,
-				extraFileExtensions: ['.json']
+				extraFileExtensions: [".json"],
 			},
 		},
-	},
-	// @ts-expect-error typing mismatch for configs
-	...(obsidianmd.configs?.recommendedWithLocalesEn ?? []),
-	{
-		plugins: { obsidianmd },
-		rules: {
-			"obsidianmd/ui/sentence-case-locale-module": "error",
-		}
 	},
 	{
 		files: ["scripts/**/*.ts"],
@@ -48,17 +64,12 @@ export default tseslint.config(
 			"@typescript-eslint/no-unsafe-assignment": "off",
 			"@typescript-eslint/no-unsafe-call": "off",
 			"@typescript-eslint/no-unsafe-argument": "off",
+			"obsidianmd/rule-custom-message": "off",
+			"obsidianmd/no-global-this": "off",
 		},
 	},
-	globalIgnores([
-		"node_modules",
-		"dist",
-		"esbuild.config.mjs",
-		"eslint.config.js",
-		"version-bump.mjs",
-		"versions.json",
-		"main.js",
-		"vitest.config.ts",
-		"obsidian-tests/demo-artifacts",
-	]),
-);
+	{
+		files: ["**/*.json"],
+		rules: disableObsidianTypedRules,
+	},
+]);

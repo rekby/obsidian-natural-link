@@ -118,7 +118,7 @@ export class NaturalLinkModal extends SuggestModal<LinkSuggestion> {
 
 	onNoSuggestion(): void {
 		this.resultContainerEl.empty();
-		this.resultContainerEl.createEl("div", {
+		this.resultContainerEl.createDiv({
 			text: t("modal.no-results"),
 			cls: "suggestion-empty",
 		});

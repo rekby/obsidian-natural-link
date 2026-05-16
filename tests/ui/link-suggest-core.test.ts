@@ -431,12 +431,16 @@ describe("LinkSuggestCore contextual priority boosting", () => {
 				rendered.push({ tag, text: opts?.text, cls: opts?.cls });
 				return el;
 			},
+			createDiv: (opts?: { text?: string; cls?: string }) => {
+				rendered.push({ tag: "div", text: opts?.text, cls: opts?.cls });
+				return el;
+			},
 		} as unknown as HTMLElement;
 
 		core.renderSuggestion(noteSuggestion!, el);
 		const hint = rendered.find((entry) => entry.cls === "suggestion-note natural-link-boost-reason");
 
-		expect(hint?.text).toBe("(used)");
+		expect(hint?.text).toBe("(Used)");
 	});
 });
 // ----- Block suggestions: list items -----

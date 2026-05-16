@@ -16,6 +16,8 @@ on:
                 type: string
 permissions:
     contents: write
+    id-token: write
+    attestations: write
 jobs:
     release:
         runs-on: ubuntu-latest
@@ -54,6 +56,14 @@ jobs:
               run: |
                 npm ci
                 npm run build
+
+            - name: attest build provenance
+              uses: actions/attest-build-provenance@v2
+              with:
+                  subject-path: |
+                      main.js
+                      manifest.json
+                      styles.css
 
             - name: push tag to github
               run: |

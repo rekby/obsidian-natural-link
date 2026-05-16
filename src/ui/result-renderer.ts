@@ -6,9 +6,9 @@ import { t } from "../i18n";
  * Shared between NaturalLinkModal and NaturalLinkSuggest.
  */
 export function renderSearchResult(result: SearchResult, el: HTMLElement): void {
-	el.createEl("div", { text: result.note.title, cls: "suggestion-title" });
+	el.createDiv({ text: result.note.title, cls: "suggestion-title" });
 	if (result.matchedAlias) {
-		el.createEl("div", {
+		el.createDiv({
 			text: result.matchedAlias,
 			cls: "suggestion-note natural-link-matched-alias",
 		});

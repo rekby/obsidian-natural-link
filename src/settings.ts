@@ -135,7 +135,7 @@ export class NaturalLinkSettingTab extends PluginSettingTab {
 				app.setting.open();
 				app.setting.openTabById("hotkeys");
 				// Delay to let the tab render before setting the filter
-				setTimeout(() => {
+				window.setTimeout(() => {
 					const searchComponent = app.setting?.activeTab?.searchComponent;
 					if (searchComponent) {
 						searchComponent.setValue("Natural link");

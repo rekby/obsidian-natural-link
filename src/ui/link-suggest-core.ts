@@ -433,9 +433,9 @@ export class LinkSuggestCore {
 		item: Extract<LinkSuggestion, { type: "note" }>,
 		el: HTMLElement,
 	): void {
-		el.createEl("div", { text: item.note.title, cls: "suggestion-title" });
+		el.createDiv({ text: item.note.title, cls: "suggestion-title" });
 		if (item.matchedAlias) {
-			el.createEl("div", {
+			el.createDiv({
 				text: item.matchedAlias,
 				cls: "suggestion-note natural-link-matched-alias",
 			});
@@ -464,7 +464,7 @@ export class LinkSuggestCore {
 		el: HTMLElement,
 	): void {
 		const prefix = "#".repeat(item.level) + " ";
-		el.createEl("div", {
+		el.createDiv({
 			text: `${item.note.title} > ${prefix}${item.heading}`,
 			cls: "suggestion-title",
 		});
@@ -478,7 +478,7 @@ export class LinkSuggestCore {
 		item: Extract<LinkSuggestion, { type: "block" }>,
 		el: HTMLElement,
 	): void {
-		el.createEl("div", { text: item.blockText, cls: "suggestion-title natural-link-block-text" });
+		el.createDiv({ text: item.blockText, cls: "suggestion-title natural-link-block-text" });
 		if (item.blockId) {
 			el.createEl("small", {
 				text: `^${item.blockId}`,
