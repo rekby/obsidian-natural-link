@@ -37,7 +37,7 @@
 		"saxes": "^6.0.0",
 		"tar-stream": "^3.1.8",
 		"tslib": "^2.8.1",
-		"tsx": "^4.20.5",
+		"tsx": "4.21.0",
 		"typescript": "^5.8.3",
 		"typescript-eslint": "^8.59.3",
 		"unbzip2-stream": "^1.4.3",
