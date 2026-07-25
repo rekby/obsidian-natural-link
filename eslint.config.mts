@@ -39,10 +39,12 @@ export default defineConfig(
 		// mobile" rules do not apply to it.
 		'eslint.config.mts',
 		// The test harness and demo scenarios are plain .mjs run by wdio or node,
-		// outside the TS project — but fixture-plugin/**/*.ts is linted, so the
-		// template checks its own plugin code the same way a real plugin does.
+		// outside the TS project.
 		'obsidian-tests/**/*.mjs',
 		'obsidian-tests/demo-artifacts',
+		// The fixture travels into every plugin, where it is inert and outside
+		// the plugin's tsconfig. `tsc` still type-checks it in the template.
+		'obsidian-tests/fixture-plugin',
 		'scripts',
 		'docs',
 		'wdio.conf.mjs',
