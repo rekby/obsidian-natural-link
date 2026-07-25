@@ -13,5 +13,12 @@ export const DETERMINISTIC_CHROME_OPTIONS = {
 		'--force-device-scale-factor=1',
 		'--disable-lcd-text',
 		'--font-render-hinting=none',
+		// Chromium freezes rAF and throttles timers in windows that are not
+		// frontmost. During a long capture run the Obsidian window inevitably
+		// loses focus, and a screenshot that waits for a paint frame would then
+		// hang until the WebDriver script timeout.
+		'--disable-background-timer-throttling',
+		'--disable-renderer-backgrounding',
+		'--disable-backgrounding-occluded-windows',
 	],
 };

@@ -50,6 +50,15 @@ export async function blurActiveElement() {
  */
 export async function prepareForScreenshot() {
 	await browser.executeObsidian(async ({ app }, selectors) => {
+		// Never block forever: fonts.ready and rAF both stall in a backgrounded
+		// window, and a hung wait here surfaces as an opaque WebDriver script
+		// timeout minutes later. Capturing a frame slightly early is recoverable;
+		// losing the whole run is not.
+		const withDeadline = (promise, ms) => Promise.race([
+			promise,
+			new Promise((resolve) => setTimeout(resolve, ms)),
+		]);
+
 		const active = document.activeElement;
 		if (active && typeof active.blur === 'function' && active !== document.body) {
 			active.blur();
@@ -61,8 +70,11 @@ export async function prepareForScreenshot() {
 		});
 
 		if (document.fonts && typeof document.fonts.ready?.then === 'function') {
-			await document.fonts.ready;
+			await withDeadline(document.fonts.ready, 2000);
 		}
-		await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+		await withDeadline(
+			new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+			1000,
+		);
 	}, VAULT_NAME_SELECTORS);
 }
