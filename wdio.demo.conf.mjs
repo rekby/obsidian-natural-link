@@ -36,7 +36,14 @@ export const config = {
 			'wdio:obsidianOptions': {
 				installerVersion,
 				plugins: [resolvePluginRoot()],
-				vault: resolveVault('./obsidian-tests/demo-vault', './obsidian-tests/fixture-plugin/vault'),
+				// Plugins name their demo vault differently; the first one that
+				// exists wins. Multi-locale suites usually override the vault
+				// per spec via `browser.reloadObsidian({ vault })` anyway.
+				vault: resolveVault(
+					'./obsidian-tests/demo-vault',
+					'./obsidian-tests/demo-vaults/en',
+					'./obsidian-tests/fixture-plugin/vault',
+				),
 			},
 			'goog:chromeOptions': DETERMINISTIC_CHROME_OPTIONS,
 		},
