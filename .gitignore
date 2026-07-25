@@ -52,3 +52,8 @@ data.json
 # Raw demo frames. Only the rendered GIFs/PNGs under docs/demo are committed.
 obsidian-tests/demo-artifacts
 obsidian-tests/fixture-plugin/demo-artifacts
+
+# The fixture's own demo output. It proves the pipeline works when you run
+# `npm run demo` here, but committing it would ship binary noise into every
+# plugin that syncs with the template.
+obsidian-tests/fixture-plugin/docs
