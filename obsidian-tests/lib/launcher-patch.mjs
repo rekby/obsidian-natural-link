@@ -16,9 +16,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import ObsidianLauncher from 'obsidian-launcher';
-
-/** Vault name shown in demo screenshots. Also the tmp directory name. */
-export const STABLE_VAULT_NAME = 'plugin-demo-vault';
+import { STABLE_VAULT_NAME } from './constants.mjs';
 
 export function patchLauncherForStableVault(vaultName = STABLE_VAULT_NAME) {
 	if (ObsidianLauncher.prototype.__demoSetupVaultPatched) return;
