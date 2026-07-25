@@ -41,19 +41,28 @@ export async function blurActiveElement() {
 }
 
 /**
- * Quiet the page immediately before a screenshot: drop focus (avoids caret and
- * selection artefacts), re-assert the stable vault name, wait for webfonts, then
- * flush two paint frames.
+ * Quiet the page immediately before a screenshot: re-assert the stable vault
+ * name, wait for webfonts, then flush two paint frames.
  *
  * The double `requestAnimationFrame` is what guarantees the compositor has
  * committed a frame — a single one can return before the paint lands.
+ *
+ * Deliberately does **not** blur the focused element: a scenario that types into
+ * a modal would lose focus on every captured frame, and the rest of its input
+ * would go nowhere. Caret and selection are already hidden by CSS
+ * (see `freeze-ui.mjs`), so blurring buys nothing here. Call
+ * `normalizeEditorState()` between scenarios instead.
  */
 export async function prepareForScreenshot() {
 	await browser.executeObsidian(async ({ app }, selectors) => {
-		const active = document.activeElement;
-		if (active && typeof active.blur === 'function' && active !== document.body) {
-			active.blur();
-		}
+		// Never block forever: fonts.ready and rAF both stall in a backgrounded
+		// window, and a hung wait here surfaces as an opaque WebDriver script
+		// timeout minutes later. Capturing a frame slightly early is recoverable;
+		// losing the whole run is not.
+		const withDeadline = (promise, ms) => Promise.race([
+			promise,
+			new Promise((resolve) => setTimeout(resolve, ms)),
+		]);
 
 		const stableName = app.vault.getName();
 		document.querySelectorAll(selectors).forEach((el) => {
@@ -61,8 +70,11 @@ export async function prepareForScreenshot() {
 		});
 
 		if (document.fonts && typeof document.fonts.ready?.then === 'function') {
-			await document.fonts.ready;
+			await withDeadline(document.fonts.ready, 2000);
 		}
-		await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+		await withDeadline(
+			new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+			1000,
+		);
 	}, VAULT_NAME_SELECTORS);
 }

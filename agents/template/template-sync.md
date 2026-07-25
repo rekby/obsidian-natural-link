@@ -16,7 +16,7 @@ later sync is a plain 3-way merge and the flag is never needed again.
 Check the invariant at any time:
 
 ```bash
-git merge-base --all master template/master   # must print a commit
+git merge-base --all HEAD template/master   # must print a commit
 ```
 
 **What destroys it:** GitHub's "Squash and merge" or "Rebase and merge" on the
@@ -72,7 +72,7 @@ git commit
 # 5. Compare against the baseline from step 0
 npm run build && npm test && npm run lint
 npm run obsidian-tests
-git merge-base --all master template/master   # must print a commit
+git merge-base --all HEAD template/master   # must print a commit
 ```
 
 ## Routine sync

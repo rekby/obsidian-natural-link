@@ -50,13 +50,21 @@ export async function setLocale(locale, pluginId) {
 export async function configureDemoEnvironment({
 	pluginId,
 	locale = 'en',
+	/**
+	 * Switch Obsidian's own UI language. Off by default because it costs an
+	 * `app:reload`: a suite that alternates locales per scenario would restart
+	 * Obsidian mid-run and lose the state the scenario just set up. Turn it on
+	 * when the screenshots must show a localized Obsidian shell, and drive all
+	 * scenarios of one locale together.
+	 */
+	setAppLanguage = false,
 	stableVaultName = STABLE_VAULT_NAME,
 	styleId = 'demo-freeze-style',
 	viewportWidth = DEMO_VIEWPORT_WIDTH,
 	viewportHeight = DEMO_VIEWPORT_HEIGHT,
 	leftSplitWidth = LEFT_SPLIT_WIDTH,
 } = {}) {
-	await setLocale(locale, pluginId);
+	if (setAppLanguage) await setLocale(locale, pluginId);
 
 	const interFontCss = await loadInterFontCss();
 

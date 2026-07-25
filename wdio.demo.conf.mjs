@@ -55,7 +55,10 @@ export const config = {
 		timeout: 180000,
 	},
 	waitforInterval: 50,
-	waitforTimeout: 1000,
+	// Demo scenarios wait for UI states to settle before capturing; being
+	// impatient here produces screenshots of intermediate states, which is worse
+	// than a slow run.
+	waitforTimeout: 5000,
 	logLevel: 'info',
 	injectGlobals: false,
 	cacheDir,

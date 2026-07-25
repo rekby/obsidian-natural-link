@@ -1,15 +1,17 @@
 /* global describe, it */
 
 import path from "node:path";
-import { $, browser } from "@wdio/globals";
+import { browser } from "@wdio/globals";
 import {
-	APP_SELECTOR,
+	OVERLAY_ID,
 	expectModalPlaceholder,
 	expectSelectedSuggestionText,
 	focusEditor,
 	openModal,
 	prepareDemoScenario,
+	saveAppScreenshot,
 } from "./demo-helpers.mjs";
+import { hideKeyOverlay, showKeyOverlay } from "../lib/index.mjs";
 
 const EN_VAULT = "./obsidian-tests/demo-vaults/en";
 const RU_VAULT = "./obsidian-tests/demo-vaults/ru";
@@ -25,27 +27,11 @@ async function typeQuery(text) {
 }
 
 async function showHotkeyOverlay(label) {
-	await browser.execute((text) => {
-		const overlay = document.getElementById("natural-link-demo-key-overlay");
-		if (!overlay) return;
-		overlay.textContent = text;
-		overlay.style.display = "block";
-	}, label);
+	await showKeyOverlay(label, OVERLAY_ID);
 }
 
 async function hideHotkeyOverlay() {
-	await browser.execute(() => {
-		const overlay = document.getElementById("natural-link-demo-key-overlay");
-		if (!overlay) return;
-		overlay.textContent = "";
-		overlay.style.display = "none";
-	});
-}
-
-async function saveAppScreenshot(outputPath) {
-	const app = await $(APP_SELECTOR);
-	await app.waitForDisplayed();
-	await app.saveScreenshot(outputPath);
+	await hideKeyOverlay(OVERLAY_ID);
 }
 
 describe("Natural link README screenshots", function () {
