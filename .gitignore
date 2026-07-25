@@ -26,3 +26,4 @@ data.json
 
 # Raw demo frames. Only the rendered GIFs/PNGs under docs/demo are committed.
 obsidian-tests/demo-artifacts
+obsidian-tests/fixture-plugin/demo-artifacts

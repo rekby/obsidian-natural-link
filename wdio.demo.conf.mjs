@@ -8,7 +8,12 @@
 import path from 'node:path';
 import { DETERMINISTIC_CHROME_OPTIONS } from './obsidian-tests/lib/chrome-options.mjs';
 import { patchLauncherForStableVault } from './obsidian-tests/lib/launcher-patch.mjs';
-import { resolveObsidianVersions, resolvePluginRoot, resolveVault } from './scripts/obsidian-version.mjs';
+import {
+	resolveObsidianVersions,
+	resolvePluginRoot,
+	resolveSpecs,
+	resolveVault,
+} from './scripts/obsidian-version.mjs';
 
 patchLauncherForStableVault();
 
@@ -18,7 +23,11 @@ const { obsidianVersion, installerVersion } = resolveObsidianVersions();
 export const config = {
 	runner: 'local',
 	framework: 'mocha',
-	specs: ['./obsidian-tests/demo/**/*.e2e.mjs'],
+	specs: resolveSpecs(
+		'obsidian-tests/demo',
+		'./obsidian-tests/demo/**/*.e2e.mjs',
+		'./obsidian-tests/fixture-plugin/demo/**/*.e2e.mjs',
+	),
 	maxInstances: 1,
 	capabilities: [
 		{

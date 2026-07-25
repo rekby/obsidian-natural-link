@@ -42,14 +42,20 @@ export function resolveObsidianVersions() {
 }
 
 /**
- * First existing candidate, repo-relative. Lets the template fall back to the
- * fixture vault while real plugins use their own.
+ * First existing candidate, repo-relative. Lets the template fall back to its
+ * fixture while real plugins use their own paths — and, importantly, stops the
+ * fixture's specs and demos from also running inside every plugin.
  */
 export function resolveVault(...candidates) {
 	for (const candidate of candidates) {
 		if (fs.existsSync(path.join(repoRoot, candidate))) return candidate;
 	}
 	return candidates.at(-1);
+}
+
+/** Same idea for spec globs: the plugin's own directory wins when it exists. */
+export function resolveSpecs(pluginDir, pluginGlob, fixtureGlob) {
+	return fs.existsSync(path.join(repoRoot, pluginDir)) ? [pluginGlob] : [fixtureGlob];
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

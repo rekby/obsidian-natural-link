@@ -6,7 +6,12 @@
  * byte-reproducible screenshots.
  */
 import path from 'node:path';
-import { resolveObsidianVersions, resolvePluginRoot, resolveVault } from './scripts/obsidian-version.mjs';
+import {
+	resolveObsidianVersions,
+	resolvePluginRoot,
+	resolveSpecs,
+	resolveVault,
+} from './scripts/obsidian-version.mjs';
 
 const cacheDir = path.resolve('.obsidian-cache');
 const { obsidianVersion, installerVersion } = resolveObsidianVersions();
@@ -14,7 +19,11 @@ const { obsidianVersion, installerVersion } = resolveObsidianVersions();
 export const config = {
 	runner: 'local',
 	framework: 'mocha',
-	specs: ['./obsidian-tests/specs/**/*.e2e.mjs'],
+	specs: resolveSpecs(
+		'obsidian-tests/specs',
+		'./obsidian-tests/specs/**/*.e2e.mjs',
+		'./obsidian-tests/fixture-plugin/specs/**/*.e2e.mjs',
+	),
 	maxInstances: 1,
 	capabilities: [
 		{

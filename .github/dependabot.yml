@@ -1,0 +1,20 @@
+version: 2
+updates:
+    - package-ecosystem: npm
+      directory: /
+      schedule:
+          interval: monthly
+      groups:
+          # One PR per toolchain area: a wdio bump and an eslint bump fail in
+          # different ways and are reviewed differently.
+          wdio:
+              patterns: ['@wdio/*', 'wdio-*', 'webdriverio', 'obsidian-launcher']
+          eslint:
+              patterns: ['eslint', 'eslint-*', '@eslint/*', 'typescript-eslint']
+          demo-tooling:
+              patterns: ['ffmpeg-static', 'oxipng-bin', '@fontsource/*']
+
+    - package-ecosystem: github-actions
+      directory: /
+      schedule:
+          interval: monthly

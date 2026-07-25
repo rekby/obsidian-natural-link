@@ -1,4 +1,12 @@
+import fs from 'node:fs';
 import path from 'node:path';
+
+/**
+ * The template has no root manifest.json — that file is plugin-owned. When it is
+ * missing we are running the template's own fixture, and demo assets must stay
+ * out of `docs/`, which belongs to plugins.
+ */
+const inTemplate = !fs.existsSync('manifest.json');
 
 /** Element captured in screenshots. Never the OS desktop — that would include window chrome. */
 export const APP_SELECTOR = '.app-container';
@@ -17,11 +25,15 @@ export const LEFT_SPLIT_WIDTH = 200;
 export const STABLE_VAULT_NAME = 'plugin-demo-vault';
 
 /** Committed demo assets (PNG/GIF) and their checksum manifest. */
-export const DEMO_OUTPUT_ROOT = path.resolve('docs/demo');
+export const DEMO_OUTPUT_ROOT = path.resolve(
+	inTemplate ? 'obsidian-tests/fixture-plugin/docs/demo' : 'docs/demo',
+);
 export const CHECKSUMS_FILE = path.join(DEMO_OUTPUT_ROOT, 'CHECKSUMS.txt');
 
 /** Raw captured frames + per-scenario manifests. Gitignored. */
-export const DEMO_ARTIFACTS_ROOT = path.resolve('obsidian-tests/demo-artifacts');
+export const DEMO_ARTIFACTS_ROOT = path.resolve(
+	inTemplate ? 'obsidian-tests/fixture-plugin/demo-artifacts' : 'obsidian-tests/demo-artifacts',
+);
 
 /** Human-ish pacing for demo scenarios. */
 export const HUMAN_PAUSE_MS = 800;

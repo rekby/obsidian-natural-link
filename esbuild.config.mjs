@@ -1,4 +1,5 @@
 import esbuild from 'esbuild';
+import fs from 'node:fs';
 import process from 'process';
 import { builtinModules } from 'node:module';
 
@@ -10,11 +11,21 @@ if you want to view the source, please visit the github repository of this plugi
 
 const prod = process.argv[2] === 'production';
 
+// A real plugin builds src/main.ts. The template itself has no src/, so it
+// builds the fixture plugin instead — that way `npm run build` is meaningful in
+// both places and CI exercises the same path.
+const entryPoint = fs.existsSync('src/main.ts')
+	? 'src/main.ts'
+	: 'obsidian-tests/fixture-plugin/src/main.ts';
+const outfile = entryPoint === 'src/main.ts'
+	? 'main.js'
+	: 'obsidian-tests/fixture-plugin/main.js';
+
 const context = await esbuild.context({
 	banner: {
 		js: banner,
 	},
-	entryPoints: ['src/main.ts'],
+	entryPoints: [entryPoint],
 	bundle: true,
 	external: [
 		'obsidian',
@@ -37,7 +48,7 @@ const context = await esbuild.context({
 	logLevel: 'info',
 	sourcemap: prod ? false : 'inline',
 	treeShaking: true,
-	outfile: 'main.js',
+	outfile,
 	minify: prod,
 });
 

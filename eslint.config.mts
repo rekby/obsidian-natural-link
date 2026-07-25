@@ -1,7 +1,12 @@
+import fs from 'node:fs';
 import json from '@eslint/json';
 import obsidianmd from 'eslint-plugin-obsidianmd';
 import globals from 'globals';
 import { globalIgnores, defineConfig } from 'eslint/config';
+
+// The template has no root manifest.json (plugins own that file), and
+// projectService fails outright on a listed path that does not exist.
+const hasManifest = fs.existsSync('manifest.json');
 
 export default defineConfig(
 	globalIgnores([
@@ -10,20 +15,26 @@ export default defineConfig(
 		'esbuild.config.mjs',
 		'version-bump.mjs',
 		'versions.json',
-		'main.js',
+		'**/main.js',
 		'package.json',
 		'package-lock.json',
 		'tsconfig.json',
 		'vitest.config.ts',
 		'.obsidian-cache',
-		// Test harness, demo scenarios and scaffolding are plain .mjs/.ts run by
-		// wdio, vitest or node — not part of the plugin bundle.
-		'obsidian-tests',
+		// Build/tooling config: runs in Node, so the plugin's "no Node APIs on
+		// mobile" rules do not apply to it.
+		'eslint.config.mts',
+		// The test harness and demo scenarios are plain .mjs run by wdio or node,
+		// outside the TS project — but fixture-plugin/**/*.ts is linted, so the
+		// template checks its own plugin code the same way a real plugin does.
+		'obsidian-tests/**/*.mjs',
+		'obsidian-tests/demo-artifacts',
 		'scripts',
-		'templates',
 		'docs',
 		'wdio.conf.mjs',
 		'wdio.demo.conf.mjs',
+		// Scaffolding: contains {{PLACEHOLDER}} tokens, not valid TypeScript.
+		'templates',
 	]),
 	{
 		languageOptions: {
@@ -32,7 +43,7 @@ export default defineConfig(
 			},
 			parserOptions: {
 				projectService: {
-					allowDefaultProject: ['eslint.config.mts', 'manifest.json'],
+					allowDefaultProject: hasManifest ? ['manifest.json'] : [],
 				},
 				tsconfigRootDir: import.meta.dirname,
 				extraFileExtensions: ['.json'],
