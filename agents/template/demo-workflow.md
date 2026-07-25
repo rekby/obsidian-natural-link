@@ -61,6 +61,25 @@ OBSIDIAN_TEST_VERSION=1.12.4 OBSIDIAN_INSTALLER_VERSION=1.12.4 npm run demo
 An Obsidian upgrade then becomes a deliberate `CHECKSUMS.txt` change instead of
 silent drift.
 
+## What the harness cannot make deterministic
+
+The five layers above pin the *environment*. A scenario can still be
+non-reproducible on its own, and those cases have to be fixed in the scenario:
+
+- **Generated identifiers on screen.** A block id like `^a1b2c3`, a UUID or a
+  timestamp rendered into the frame changes every run. Either keep it out of
+  frame or make the plugin's generator injectable for demos.
+- **Ties in ordering.** When two search results score equally, their order can
+  follow filesystem or insertion order, which changes when a scenario recreates
+  vault files. Sort deterministically, or pick fixtures that cannot tie.
+- **State carried between specs in one session.** Obsidian is launched once, so a
+  scenario that writes to the vault or leaves a view open affects the next one.
+  Reset in `beforeEach`, and do not depend on spec execution order.
+
+A quick way to tell the two apart: run only the static screenshot spec twice. If
+those bytes match but a full `npm run demo` does not, the drift is in the
+scenarios, not in the harness.
+
 ## Writing a scenario
 
 - Launch Obsidian **once** per run. Between scenarios use `syncVaultFiles()` to
