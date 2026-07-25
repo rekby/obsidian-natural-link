@@ -41,12 +41,17 @@ export async function blurActiveElement() {
 }
 
 /**
- * Quiet the page immediately before a screenshot: drop focus (avoids caret and
- * selection artefacts), re-assert the stable vault name, wait for webfonts, then
- * flush two paint frames.
+ * Quiet the page immediately before a screenshot: re-assert the stable vault
+ * name, wait for webfonts, then flush two paint frames.
  *
  * The double `requestAnimationFrame` is what guarantees the compositor has
  * committed a frame — a single one can return before the paint lands.
+ *
+ * Deliberately does **not** blur the focused element: a scenario that types into
+ * a modal would lose focus on every captured frame, and the rest of its input
+ * would go nowhere. Caret and selection are already hidden by CSS
+ * (see `freeze-ui.mjs`), so blurring buys nothing here. Call
+ * `normalizeEditorState()` between scenarios instead.
  */
 export async function prepareForScreenshot() {
 	await browser.executeObsidian(async ({ app }, selectors) => {
@@ -58,11 +63,6 @@ export async function prepareForScreenshot() {
 			promise,
 			new Promise((resolve) => setTimeout(resolve, ms)),
 		]);
-
-		const active = document.activeElement;
-		if (active && typeof active.blur === 'function' && active !== document.body) {
-			active.blur();
-		}
 
 		const stableName = app.vault.getName();
 		document.querySelectorAll(selectors).forEach((el) => {
