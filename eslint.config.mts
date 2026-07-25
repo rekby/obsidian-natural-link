@@ -8,6 +8,19 @@ import { globalIgnores, defineConfig } from 'eslint/config';
 // projectService fails outright on a listed path that does not exist.
 const hasManifest = fs.existsSync('manifest.json');
 
+/**
+ * A plugin that wants its unit tests and build scripts type-linted adds a
+ * `tsconfig.eslint.json` extending tsconfig.json with those paths in `include`.
+ * Without it, files outside the build tsconfig are "not found by the project
+ * service" — and `allowDefaultProject` is not meant for whole directories.
+ */
+const eslintTsconfig = 'tsconfig.eslint.json';
+const hasEslintTsconfig = fs.existsSync(eslintTsconfig);
+
+const typedParserOptions = hasEslintTsconfig
+	? { project: eslintTsconfig }
+	: { projectService: { allowDefaultProject: hasManifest ? ['manifest.json'] : [] } };
+
 export default defineConfig(
 	globalIgnores([
 		'node_modules',
@@ -19,6 +32,7 @@ export default defineConfig(
 		'package.json',
 		'package-lock.json',
 		'tsconfig.json',
+		'tsconfig.eslint.json',
 		'vitest.config.ts',
 		'.obsidian-cache',
 		// Build/tooling config: runs in Node, so the plugin's "no Node APIs on
@@ -42,15 +56,15 @@ export default defineConfig(
 				...globals.browser,
 			},
 			parserOptions: {
-				projectService: {
-					allowDefaultProject: hasManifest ? ['manifest.json'] : [],
-				},
+				...typedParserOptions,
 				tsconfigRootDir: import.meta.dirname,
 				extraFileExtensions: ['.json'],
 			},
 		},
 	},
-	...obsidianmd.configs.recommended,
+	// recommendedWithLocalesEn additionally enforces sentence-case UI strings in
+	// i18n modules; fall back when the installed plugin version lacks it.
+	...(obsidianmd.configs.recommendedWithLocalesEn ?? obsidianmd.configs.recommended),
 	{
 		// Validate manifest.json against Obsidian's plugin manifest rules.
 		files: ['manifest.json'],

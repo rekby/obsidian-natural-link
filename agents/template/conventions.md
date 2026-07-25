@@ -67,6 +67,11 @@ alphabetically inside the relevant block — so this layout survives normal use.
 `tsconfig.json`: `compilerOptions` (template) first, `include` / `exclude` /
 `paths` (plugin) last.
 
+One exception inside `compilerOptions`: **type-strictness flags belong to the
+plugin.** The template ships `strict: true`, but a plugin that predates it may
+not compile under that, and a template sync must not turn into a refactor. Keep
+the plugin's strictness, adopt the rest, and tighten types as a separate change.
+
 ## Known compromises
 
 - **Dependabot in plugins can bump template-owned devDependencies.** The bumped
