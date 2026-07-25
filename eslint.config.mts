@@ -1,75 +1,64 @@
-import tsparser from "@typescript-eslint/parser";
-import { defineConfig, globalIgnores } from "eslint/config";
-import obsidianmd from "eslint-plugin-obsidianmd";
-import globals from "globals";
+import fs from 'node:fs';
+import json from '@eslint/json';
+import obsidianmd from 'eslint-plugin-obsidianmd';
+import globals from 'globals';
+import { globalIgnores, defineConfig } from 'eslint/config';
 
-// Rules from eslint-plugin-obsidianmd that need TypeScript type information.
-// They must be disabled on non-TS files (package.json, etc.) to avoid
-// "rule requires type information" parser errors.
-const obsidianTypedRules = [
-	"obsidianmd/no-plugin-as-component",
-	"obsidianmd/no-view-references-in-plugin",
-	"obsidianmd/no-unsupported-api",
-	"obsidianmd/prefer-file-manager-trash-file",
-	"obsidianmd/prefer-instanceof",
-];
-const disableObsidianTypedRules = Object.fromEntries(
-	obsidianTypedRules.map((name) => [name, "off"]),
-);
+// The template has no root manifest.json (plugins own that file), and
+// projectService fails outright on a listed path that does not exist.
+const hasManifest = fs.existsSync('manifest.json');
 
-export default defineConfig([
+export default defineConfig(
 	globalIgnores([
-		"node_modules",
-		"dist",
-		"main.js",
-		"esbuild.config.mjs",
-		"version-bump.mjs",
-		"vitest.config.ts",
-		"wdio.conf.mjs",
-		"wdio.demo.conf.mjs",
-		"obsidian-tests",
-		"versions.json",
-		"data.json",
-		"package-lock.json",
-		"tsconfig.json",
-		"tsconfig.eslint.json",
-		".claude",
-		".obsidian-cache",
+		'node_modules',
+		'dist',
+		'esbuild.config.mjs',
+		'version-bump.mjs',
+		'versions.json',
+		'**/main.js',
+		'package.json',
+		'package-lock.json',
+		'tsconfig.json',
+		'vitest.config.ts',
+		'.obsidian-cache',
+		// Build/tooling config: runs in Node, so the plugin's "no Node APIs on
+		// mobile" rules do not apply to it.
+		'eslint.config.mts',
+		// The test harness and demo scenarios are plain .mjs run by wdio or node,
+		// outside the TS project — but fixture-plugin/**/*.ts is linted, so the
+		// template checks its own plugin code the same way a real plugin does.
+		'obsidian-tests/**/*.mjs',
+		'obsidian-tests/demo-artifacts',
+		'scripts',
+		'docs',
+		'wdio.conf.mjs',
+		'wdio.demo.conf.mjs',
+		// Scaffolding: contains {{PLACEHOLDER}} tokens, not valid TypeScript.
+		'templates',
 	]),
-	...obsidianmd.configs.recommendedWithLocalesEn,
 	{
-		files: ["**/*.ts", "**/*.tsx", "manifest.json"],
-		languageOptions: {
-			parser: tsparser,
-			parserOptions: {
-				project: "./tsconfig.eslint.json",
-				tsconfigRootDir: import.meta.dirname,
-				extraFileExtensions: [".json"],
-			},
-		},
-	},
-	{
-		files: ["scripts/**/*.ts"],
 		languageOptions: {
 			globals: {
-				...globals.node,
+				...globals.browser,
+			},
+			parserOptions: {
+				projectService: {
+					allowDefaultProject: hasManifest ? ['manifest.json'] : [],
+				},
+				tsconfigRootDir: import.meta.dirname,
+				extraFileExtensions: ['.json'],
 			},
 		},
+	},
+	...obsidianmd.configs.recommended,
+	{
+		// Validate manifest.json against Obsidian's plugin manifest rules.
+		files: ['manifest.json'],
+		language: 'json/json',
+		plugins: { json, obsidianmd },
 		rules: {
-			"import/no-nodejs-modules": "off",
-			"no-console": "off",
-			"no-restricted-globals": "off",
-			"no-undef": "off",
-			"@typescript-eslint/only-throw-error": "off",
-			"@typescript-eslint/no-unsafe-assignment": "off",
-			"@typescript-eslint/no-unsafe-call": "off",
-			"@typescript-eslint/no-unsafe-argument": "off",
-			"obsidianmd/rule-custom-message": "off",
-			"obsidianmd/no-global-this": "off",
+			'no-irregular-whitespace': 'off',
+			'obsidianmd/validate-manifest': 'error',
 		},
 	},
-	{
-		files: ["**/*.json"],
-		rules: disableObsidianTypedRules,
-	},
-]);
+);

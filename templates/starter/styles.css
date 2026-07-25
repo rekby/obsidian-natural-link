@@ -1,0 +1,7 @@
+/*
+Styles for {{PLUGIN_NAME}}.
+
+Prefer Obsidian's CSS variables (--text-muted, --background-secondary, ...) over
+hard-coded colors so the plugin follows the user's theme — and so demo
+screenshots, which force the light theme, stay representative.
+*/

@@ -1,35 +1,52 @@
-import path from "node:path";
-import process from "node:process";
+/**
+ * Functional end-to-end tests against a real Obsidian desktop app.
+ *
+ * Kept separate from `wdio.demo.conf.mjs`: this config optimizes for catching
+ * regressions (fast timeouts, no visual freezing), the demo one optimizes for
+ * byte-reproducible screenshots.
+ */
+import path from 'node:path';
+import {
+	resolveObsidianVersions,
+	resolvePluginRoot,
+	resolveSpecs,
+	resolveVault,
+} from './scripts/obsidian-version.mjs';
 
-const cacheDir = path.resolve(".obsidian-cache");
-const obsidianVersion = process.env.OBSIDIAN_TEST_VERSION ?? "latest";
-const installerVersion = process.env.OBSIDIAN_INSTALLER_VERSION ?? "latest";
+const cacheDir = path.resolve('.obsidian-cache');
+const { obsidianVersion, installerVersion } = resolveObsidianVersions();
 
 export const config = {
-	runner: "local",
-	framework: "mocha",
-	specs: ["./obsidian-tests/specs/**/*.e2e.mjs"],
+	runner: 'local',
+	framework: 'mocha',
+	specs: resolveSpecs(
+		'obsidian-tests/specs',
+		'./obsidian-tests/specs/**/*.e2e.mjs',
+		'./obsidian-tests/fixture-plugin/specs/**/*.e2e.mjs',
+	),
 	maxInstances: 1,
 	capabilities: [
 		{
-			browserName: "obsidian",
+			browserName: 'obsidian',
 			browserVersion: obsidianVersion,
-			"wdio:obsidianOptions": {
+			'wdio:obsidianOptions': {
 				installerVersion,
-				plugins: ["."],
-				vault: "./obsidian-tests/vault",
+				plugins: [resolvePluginRoot()],
+				vault: resolveVault('./obsidian-tests/vault', './obsidian-tests/fixture-plugin/vault'),
 			},
 		},
 	],
-	services: ["obsidian"],
-	reporters: ["obsidian"],
+	services: ['obsidian'],
+	reporters: ['obsidian'],
 	mochaOpts: {
-		ui: "bdd",
-		timeout: 120000,
+		ui: 'bdd',
+		timeout: 180000,
 	},
-	waitforInterval: 250,
-	waitforTimeout: 15000,
-	logLevel: "info",
+	// Tight polling: functional specs assert on state that should already be
+	// there, so a slow timeout only delays the failure report.
+	waitforInterval: 100,
+	waitforTimeout: 1000,
+	logLevel: 'info',
 	injectGlobals: false,
 	cacheDir,
 };

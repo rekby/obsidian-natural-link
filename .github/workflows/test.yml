@@ -1,34 +1,33 @@
 name: Tests
 
 on:
-  push:
-    branches:
-      - master
-  pull_request:
-    branches: ["**"]
+    push:
+        branches: ['**']
+    pull_request:
+        branches: ['**']
 
 jobs:
-  ci:
-    runs-on: ubuntu-latest
+    ci:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v6
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+            - uses: actions/setup-node@v6
+              with:
+                  node-version: '22'
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'npm'
+            # Not actions/setup-node's `cache: npm`: that requires a committed
+            # package-lock.json, which the template itself does not have.
+            - uses: actions/cache@v4
+              with:
+                  path: ~/.npm
+                  key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json', 'package.json') }}
+                  restore-keys: npm-${{ runner.os }}-
 
-      - name: Install dependencies
-        run: npm ci
+            - name: Install dependencies
+              run: |
+                  if [ -f package-lock.json ]; then npm ci; else npm install; fi
 
-      - name: Build project
-        run: npm run build
-
-      - name: Run tests
-        run: npm test
-
-      - name: Run linter
-        run: npm run lint
+            - run: npm run build
+            - run: npm test
+            - run: npm run lint
