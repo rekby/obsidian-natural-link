@@ -31,3 +31,17 @@ jobs:
             - run: npm run build
             - run: npm test
             - run: npm run lint
+
+            # A plugin adopts the template with one unrelated-histories merge;
+            # after that the merge commit is what makes every later sync an
+            # ordinary 3-way merge. Squash- or rebase-merging a sync PR destroys
+            # it and silently breaks all future updates, so fail loudly instead.
+            - name: Template ancestry intact
+              if: hashFiles('agents/template/template-sync.md') != ''
+              run: |
+                  git remote get-url template >/dev/null 2>&1 || exit 0
+                  git fetch --quiet template
+                  if [ -z "$(git merge-base --all HEAD template/master)" ]; then
+                    echo "::error::No merge base with the template — the adoption merge commit was lost." >&2
+                    exit 1
+                  fi
