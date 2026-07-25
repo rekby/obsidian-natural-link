@@ -1,0 +1,11 @@
+* text=auto eol=lf
+
+# Append-only list: the built-in `union` driver concatenates both sides instead
+# of conflicting. Built in, so it needs no merge.*.driver in .git/config.
+.gitignore     merge=union
+
+# Generated demo assets. A content merge is meaningless for binaries — resolve
+# by regenerating with `npm run demo`.
+docs/demo/**   -merge -diff binary
+*.gif          -merge -diff binary
+*.png          -merge -diff binary
