@@ -51,8 +51,15 @@ Every one of these is load-bearing; dropping any one reintroduces byte churn.
    ordered `dither=bayer`, and no scale filter. Then each GIF is re-rendered to
    a tmpfile and compared by sha256.
 
-Obsidian itself is pinned to `manifest.minAppVersion` — a floating "latest"
-would change rendering whenever Obsidian ships a release.
+Obsidian itself defaults to "latest". Assets are byte-identical within one
+Obsidian version; to keep them stable across Obsidian releases as well, pin it:
+
+```bash
+OBSIDIAN_TEST_VERSION=1.12.4 OBSIDIAN_INSTALLER_VERSION=1.12.4 npm run demo
+```
+
+An Obsidian upgrade then becomes a deliberate `CHECKSUMS.txt` change instead of
+silent drift.
 
 ## Writing a scenario
 

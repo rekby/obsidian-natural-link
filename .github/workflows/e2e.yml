@@ -29,16 +29,18 @@ jobs:
               run: |
                   if [ -f package-lock.json ]; then npm ci; else npm install; fi
 
-            # The plugin pins Obsidian to manifest.minAppVersion, so the cache key
-            # only changes when the plugin raises its minimum supported version.
-            - name: Resolve Obsidian version
+            # Obsidian resolves to "latest" unless OBSIDIAN_TEST_VERSION is set,
+            # so the cache is keyed by week: fresh enough to pick up releases,
+            # stale enough to avoid re-downloading on every run.
+            - name: Cache key window
               id: obsidian
-              run: echo "version=$(node scripts/obsidian-version.mjs app)" >> "$GITHUB_OUTPUT"
+              run: echo "week=$(date +%Y-%V)" >> "$GITHUB_OUTPUT"
 
             - uses: actions/cache@v4
               with:
                   path: .obsidian-cache
-                  key: obsidian-${{ runner.os }}-${{ steps.obsidian.outputs.version }}
+                  key: obsidian-${{ runner.os }}-${{ steps.obsidian.outputs.week }}
+                  restore-keys: obsidian-${{ runner.os }}-
 
             - name: Run e2e tests against real Obsidian
               run: xvfb-run -a npm run obsidian-tests

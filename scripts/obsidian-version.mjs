@@ -29,15 +29,25 @@ export function readManifest() {
 }
 
 /**
- * Pin Obsidian to the oldest version the plugin claims to support. A floating
- * "latest" would change rendering — and therefore screenshot bytes — whenever
- * Obsidian ships a release.
+ * Which Obsidian to test against.
+ *
+ * Defaults to "latest", because that is what users actually run and what an e2e
+ * suite should catch regressions on. Pinning to `manifest.minAppVersion` sounds
+ * appealing for reproducibility but is impractical: a plugin that still claims
+ * `0.15.0` would download a years-old build nobody uses.
+ *
+ * Demo assets stay byte-identical within one Obsidian version. If you need them
+ * stable across Obsidian releases too, pin the version explicitly:
+ *
+ *   OBSIDIAN_TEST_VERSION=1.12.4 OBSIDIAN_INSTALLER_VERSION=1.12.4 npm run demo
+ *
+ * An Obsidian upgrade then shows up as a deliberate CHECKSUMS.txt change rather
+ * than as silent drift.
  */
 export function resolveObsidianVersions() {
-	const { minAppVersion } = readManifest();
 	return {
-		obsidianVersion: process.env.OBSIDIAN_TEST_VERSION ?? minAppVersion,
-		installerVersion: process.env.OBSIDIAN_INSTALLER_VERSION ?? minAppVersion,
+		obsidianVersion: process.env.OBSIDIAN_TEST_VERSION ?? 'latest',
+		installerVersion: process.env.OBSIDIAN_INSTALLER_VERSION ?? 'latest',
 	};
 }
 
