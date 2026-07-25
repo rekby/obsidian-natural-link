@@ -1,0 +1,9 @@
+{
+	"id": "template-fixture",
+	"name": "Template Fixture",
+	"version": "0.0.1",
+	"minAppVersion": "1.12.4",
+	"description": "Minimal plugin used by the template's own test suite.",
+	"author": "rekby",
+	"isDesktopOnly": false
+}

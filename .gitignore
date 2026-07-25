@@ -23,3 +23,32 @@ obsidian-tests/demo-artifacts
 
 # Exclude macOS Finder (System Explorer) View States
 .DS_Store
+# vscode
+.vscode
+
+# Intellij
+*.iml
+.idea
+
+# npm
+node_modules
+
+# Don't include the compiled main.js file in the repo.
+# They should be uploaded to GitHub releases instead.
+main.js
+
+# Exclude sourcemaps
+*.map
+
+# obsidian
+data.json
+
+# Exclude macOS Finder (System Explorer) View States
+.DS_Store
+
+# Obsidian binaries downloaded by wdio-obsidian-service
+.obsidian-cache
+
+# Raw demo frames. Only the rendered GIFs/PNGs under docs/demo are committed.
+obsidian-tests/demo-artifacts
+obsidian-tests/fixture-plugin/demo-artifacts
