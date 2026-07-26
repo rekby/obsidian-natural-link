@@ -1,10 +1,12 @@
 name: Publish Release
 
+# Manual, because releasing an Obsidian plugin is a deliberate act: the version
+# bump is also a commit and a tag on master.
 on:
     workflow_dispatch:
         inputs:
             version-part:
-                description: Part of version number for change
+                description: Part of version number to bump
                 required: true
                 type: choice
                 options:
@@ -14,19 +16,19 @@ on:
                 description: Title for the release
                 required: false
                 type: string
+
 permissions:
     contents: write
     id-token: write
     attestations: write
+
 jobs:
     release:
         runs-on: ubuntu-latest
         steps:
-            - name: checkout
-              uses: actions/checkout@v4
+            - uses: actions/checkout@v6
 
-            - name: install nodejs
-              uses: actions/setup-node@v4
+            - uses: actions/setup-node@v6
               with:
                   node-version: '22'
 
@@ -38,24 +40,30 @@ jobs:
             - name: up version
               id: bump-version
               run: |
-                CURRENT_VERSION=$(node -e "console.log(JSON.parse(require('fs').readFileSync('package.json', 'utf8')).version)")
+                  CURRENT_VERSION=$(node -p "require('./package.json').version")
 
-                if [[ "$CURRENT_VERSION" == *-pre-release ]]; then
-                  VERSION="${CURRENT_VERSION%-pre-release}"
+                  # An X.Y.Z-pre-release version releases as X.Y.Z instead of
+                  # bumping — that is how a plugin ships its first release.
                   npm config set tag-version-prefix ""
-                  npm version "$VERSION"
-                else
-                  npm config set tag-version-prefix ""
-                  npm version "${{ github.event.inputs.version-part }}"
-                  VERSION=$(node -e "console.log(JSON.parse(require('fs').readFileSync('package.json', 'utf8')).version)")
-                fi
+                  if [[ "$CURRENT_VERSION" == *-pre-release ]]; then
+                    VERSION="${CURRENT_VERSION%-pre-release}"
+                    npm version "$VERSION"
+                  else
+                    npm version "${{ github.event.inputs.version-part }}"
+                    VERSION=$(node -p "require('./package.json').version")
+                  fi
 
-                echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+                  echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
             - name: build
               run: |
-                npm ci
-                npm run build
+                  npm ci
+                  npm run build
+
+            - name: check for optional styles
+              id: styles
+              run: |
+                  [ -f styles.css ] && echo "exists=true" >> "$GITHUB_OUTPUT" || echo "exists=false" >> "$GITHUB_OUTPUT"
 
             - name: attest build provenance
               uses: actions/attest-build-provenance@v2
@@ -63,12 +71,12 @@ jobs:
                   subject-path: |
                       main.js
                       manifest.json
-                      styles.css
+                      ${{ steps.styles.outputs.exists == 'true' && 'styles.css' || '' }}
 
             - name: push tag to github
               run: |
-                git push origin
-                git push origin --tags
+                  git push origin
+                  git push origin --tags
 
             - name: create release
               uses: softprops/action-gh-release@v2
@@ -79,4 +87,4 @@ jobs:
                   files: |
                       main.js
                       manifest.json
-                      styles.css
+                      ${{ steps.styles.outputs.exists == 'true' && 'styles.css' || '' }}

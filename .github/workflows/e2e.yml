@@ -1,0 +1,46 @@
+name: E2E
+
+# Drives a real Obsidian desktop app under a virtual display. Slower than the
+# unit job and it downloads Obsidian, hence a separate workflow — a red E2E and
+# a red unit run mean very different things.
+on:
+    push:
+        branches: ['**']
+    pull_request:
+        branches: ['**']
+
+jobs:
+    e2e:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v6
+
+            - uses: actions/setup-node@v6
+              with:
+                  node-version: '22'
+
+            - uses: actions/cache@v4
+              with:
+                  path: ~/.npm
+                  key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json', 'package.json') }}
+                  restore-keys: npm-${{ runner.os }}-
+
+            - name: Install dependencies
+              run: |
+                  if [ -f package-lock.json ]; then npm ci; else npm install; fi
+
+            # Obsidian resolves to "latest" unless OBSIDIAN_TEST_VERSION is set,
+            # so the cache is keyed by week: fresh enough to pick up releases,
+            # stale enough to avoid re-downloading on every run.
+            - name: Cache key window
+              id: obsidian
+              run: echo "week=$(date +%Y-%V)" >> "$GITHUB_OUTPUT"
+
+            - uses: actions/cache@v4
+              with:
+                  path: .obsidian-cache
+                  key: obsidian-${{ runner.os }}-${{ steps.obsidian.outputs.week }}
+                  restore-keys: obsidian-${{ runner.os }}-
+
+            - name: Run e2e tests against real Obsidian
+              run: xvfb-run -a npm run obsidian-tests

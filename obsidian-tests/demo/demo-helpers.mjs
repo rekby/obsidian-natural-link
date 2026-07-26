@@ -1,20 +1,45 @@
+/**
+ * Demo helpers specific to natural-link.
+ *
+ * Everything generic — freezing the UI, locking the window, capturing frames,
+ * rendering byte-identical GIFs — lives in `obsidian-tests/lib/` and is owned by
+ * the plugin template. Keep only plugin-specific ids, selectors and strings
+ * here, so a template sync never conflicts with this file.
+ */
 import assert from "node:assert/strict";
-import fs from "node:fs/promises";
 import path from "node:path";
-import process from "node:process";
 import { $, browser } from "@wdio/globals";
 import { obsidianPage } from "wdio-obsidian-service";
+import {
+	DEMO_ARTIFACTS_ROOT as LIB_ARTIFACTS_ROOT,
+	DEMO_OUTPUT_ROOT as LIB_OUTPUT_ROOT,
+	DemoRecorder as LibDemoRecorder,
+	HUMAN_KEY_DELAY_MS,
+	HUMAN_PAUSE_MS,
+	APP_SELECTOR,
+	captureKeyPress as libCaptureKeyPress,
+	configureDemoEnvironment as freezeUi,
+	readVaultDir,
+	saveAppScreenshot,
+	syncVaultFiles,
+	waitForMetadataResolved,
+	waitForPlugin as libWaitForPlugin,
+} from "../lib/index.mjs";
 
+export const PLUGIN_ID = "natural-link";
 export const COMMAND_ID = "natural-link:insert-link";
-export const DEMO_ARTIFACTS_ROOT = path.resolve("obsidian-tests/demo-artifacts");
-export const DEMO_OUTPUT_ROOT = path.resolve("docs/demo");
-export const HUMAN_KEY_DELAY_MS = 200;
-export const HUMAN_PAUSE_MS = 800;
 export const OPEN_MODAL_CAPTION = "Cmd/Ctrl+Shift+K";
+export const STYLE_ID = "natural-link-demo-style";
+export const OVERLAY_ID = "natural-link-demo-key-overlay";
 
-export const APP_SELECTOR = ".app-container";
+export { APP_SELECTOR, HUMAN_KEY_DELAY_MS, HUMAN_PAUSE_MS, saveAppScreenshot };
+
+export const DEMO_OUTPUT_ROOT = LIB_OUTPUT_ROOT;
+export const DEMO_ARTIFACTS_ROOT = LIB_ARTIFACTS_ROOT;
+
 const INPUT_SELECTOR = ".modal-container .prompt-input";
 const SELECTED_SUGGESTION_SELECTOR = ".suggestion-item.is-selected";
+
 export const LOCALE_TEXT = {
 	en: {
 		modalPlaceholder: "Type to search notes...",
@@ -44,74 +69,27 @@ export const LOCALE_TEXT = {
 	},
 };
 
-export class DemoRecorder {
+/** Per-locale output: docs/demo/<locale>/<scenario>.gif */
+export class DemoRecorder extends LibDemoRecorder {
 	constructor(locale, scenarioName) {
+		super(scenarioName, {
+			outputRoot: path.join(DEMO_OUTPUT_ROOT, locale),
+			artifactsRoot: path.join(DEMO_ARTIFACTS_ROOT, locale),
+		});
 		this.locale = locale;
-		this.scenarioName = scenarioName;
-		this.frames = [];
-		this.frameIndex = 0;
-		this.outputPath = path.join(DEMO_OUTPUT_ROOT, locale, `${scenarioName}.gif`);
-		this.scenarioDir = path.join(DEMO_ARTIFACTS_ROOT, locale, scenarioName);
-	}
-
-	async init() {
-		await fs.rm(this.scenarioDir, { recursive: true, force: true });
-		await fs.mkdir(this.scenarioDir, { recursive: true });
-	}
-
-	async capture(durationMs, selector = APP_SELECTOR) {
-		const target = await $(selector);
-		await target.waitForDisplayed();
-
-		const filename = `${String(this.frameIndex).padStart(4, "0")}.png`;
-		const filepath = path.join(this.scenarioDir, filename);
-		await target.saveScreenshot(filepath);
-		this.frames.push({ file: filename, durationMs });
-		this.frameIndex += 1;
-	}
-
-	async captureAndPause(durationMs, selector = APP_SELECTOR) {
-		await this.capture(durationMs, selector);
-		await browser.pause(durationMs);
 	}
 
 	async finalize(extra = {}) {
-		assert.ok(this.frames.length > 0, "demo recorder must capture at least one frame");
-
-		const manifestPath = path.join(this.scenarioDir, "manifest.json");
-		const manifest = {
-			locale: this.locale,
-			scenario: this.scenarioName,
-			output: path.relative(process.cwd(), this.outputPath),
-			frames: this.frames,
-			...extra,
-		};
-		await fs.writeFile(manifestPath, JSON.stringify(manifest, null, "\t"));
+		await super.finalize({ locale: this.locale, ...extra });
 	}
 }
 
 export async function waitForPlugin() {
-	await browser.waitUntil(
-		async () =>
-			browser.executeObsidian(
-				({ plugins }) => Boolean(plugins.naturalLink),
-			),
-		{
-			timeout: 30000,
-			timeoutMsg: "Natural link plugin did not load in time",
-		},
-	);
+	await libWaitForPlugin(PLUGIN_ID);
 }
 
-async function readVaultDir(vaultPath) {
-	const resolved = path.resolve(vaultPath);
-	const entries = await fs.readdir(resolved);
-	const snapshot = {};
-	for (const entry of entries) {
-		if (!entry.endsWith(".md")) continue;
-		snapshot[entry] = await fs.readFile(path.join(resolved, entry), "utf-8");
-	}
-	return snapshot;
+export async function captureKeyPress(recorder, label, durationMs = 650) {
+	await libCaptureKeyPress(recorder, label, durationMs, { overlayId: OVERLAY_ID });
 }
 
 export async function prepareDemoScenario({
@@ -137,57 +115,12 @@ export async function prepareDemoScenario({
 		}
 	});
 
-	const targetFiles = await readVaultDir(vault);
-
-	const filesChanged = await browser.executeObsidian(
-		async ({ app, obsidian }, snapshot) => {
-			let changed = false;
-			const knownPaths = new Set(Object.keys(snapshot));
-
-			for (const file of app.vault.getMarkdownFiles()) {
-				if (!knownPaths.has(file.path)) {
-					await app.vault.delete(file);
-					changed = true;
-				}
-			}
-
-			for (const [filePath, content] of Object.entries(snapshot)) {
-				const file = app.vault.getAbstractFileByPath(filePath);
-				if (file instanceof obsidian.TFile) {
-					const current = await app.vault.read(file);
-					if (current !== content) {
-						await app.vault.modify(file, content);
-						changed = true;
-					}
-				} else {
-					await app.vault.create(filePath, content);
-					changed = true;
-				}
-			}
-			return changed;
-		},
-		targetFiles,
-	);
-
-	if (filesChanged) {
-		await browser.executeObsidian(({ app }) =>
-			new Promise((resolve) => {
-				if (app.metadataCache.initialized) {
-					const ref = app.metadataCache.on("resolved", () => {
-						app.metadataCache.offref(ref);
-						resolve();
-					});
-					setTimeout(() => {
-						app.metadataCache.offref(ref);
-						resolve();
-					}, 2000);
-				} else {
-					resolve();
-				}
-			}),
-		);
+	if (await syncVaultFiles(await readVaultDir(vault))) {
+		await waitForMetadataResolved();
 	}
 
+	// Recency and in-flight suggest state reorder results, so a scenario would
+	// otherwise depend on whichever scenario ran before it.
 	await browser.executeObsidian(({ app, plugins }) => {
 		const plugin = plugins.naturalLink;
 		if (!plugin) return;
@@ -212,13 +145,14 @@ export async function prepareDemoScenario({
 }
 
 export async function configureDemoEnvironment(locale, inlineLinkSuggest) {
+	// Pin every setting that changes what is rendered. `showBoostReasonHint`
+	// especially: the hint text depends on scoring internals.
 	await browser.executeObsidian(
 		async ({ plugins }, nextSettings) => {
 			const plugin = plugins.naturalLink;
 			if (!plugin) {
 				throw new Error("Natural link plugin is not available");
 			}
-
 			Object.assign(plugin.settings, nextSettings);
 			await plugin.saveSettings();
 		},
@@ -230,6 +164,11 @@ export async function configureDemoEnvironment(locale, inlineLinkSuggest) {
 		},
 	);
 
+	// Freeze fonts, theme, chrome, animations, caret and window size.
+	await freezeUi({ pluginId: PLUGIN_ID, locale, styleId: STYLE_ID });
+
+	// The plugin renders its own strings through moment's locale, and the
+	// suggest instructions are built once at construction time.
 	await browser.executeObsidian(
 		({ app, obsidian, plugins }, nextLocale, nextInstructions) => {
 			obsidian.moment.locale(nextLocale);
@@ -241,79 +180,10 @@ export async function configureDemoEnvironment(locale, inlineLinkSuggest) {
 					candidate?.constructor?.name === "NaturalLinkSuggest",
 			);
 			pluginSuggest?.setInstructions?.(nextInstructions);
-
-			app.workspace.leftSplit?.expand?.();
-			app.workspace.leftSplit?.setCollapsed?.(false);
 		},
 		locale,
 		LOCALE_TEXT[locale].instructions,
 	);
-
-	await browser.execute(() => {
-		const styleId = "natural-link-demo-style";
-		document.getElementById(styleId)?.remove();
-
-		const style = document.createElement("style");
-		style.id = styleId;
-		style.textContent = `
-			body.theme-dark {
-				color-scheme: light;
-			}
-			body.theme-dark,
-			body.theme-dark .app-container {
-				background: var(--background-primary);
-			}
-			body.theme-dark .theme-dark,
-			body.theme-dark .workspace,
-			body.theme-dark .workspace-split,
-			body.theme-dark .workspace-leaf-content {
-				color: var(--text-normal);
-			}
-			.workspace-split.mod-right-split,
-			.status-bar,
-			.workspace-tab-header-container {
-				display: none !important;
-			}
-			.workspace-split.mod-left-split {
-				display: flex !important;
-				min-width: 280px !important;
-				width: 280px !important;
-			}
-			.workspace-split.mod-root {
-				inset: 0 !important;
-			}
-			#natural-link-demo-key-overlay {
-				position: fixed;
-				right: 28px;
-				bottom: 28px;
-				z-index: 10000;
-				display: none;
-				padding: 10px 14px;
-				border-radius: 12px;
-				background: rgba(28, 28, 30, 0.88);
-				color: #fff;
-				font: 600 18px/1.2 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-				letter-spacing: 0.02em;
-				box-shadow: 0 14px 32px rgba(0, 0, 0, 0.18);
-			}
-		`;
-		document.head.append(style);
-
-		let overlay = document.getElementById("natural-link-demo-key-overlay");
-		if (!overlay) {
-			overlay = document.createElement("div");
-			overlay.id = "natural-link-demo-key-overlay";
-			document.body.append(overlay);
-		}
-		overlay.textContent = "";
-		overlay.style.display = "none";
-
-		document.body.classList.remove("theme-dark");
-		document.body.classList.add("theme-light");
-		window.dispatchEvent(new Event("resize"));
-	});
-
-	await browser.pause(300);
 }
 
 export async function setEditorText(text) {
@@ -325,7 +195,10 @@ export async function setEditorText(text) {
 			}
 
 			view.editor.setValue(value);
-			view.editor.setCursor({ line: value.split("\n").length - 1, ch: value.split("\n").at(-1).length });
+			view.editor.setCursor({
+				line: value.split("\n").length - 1,
+				ch: value.split("\n").at(-1).length,
+			});
 			view.editor.focus();
 		},
 		text,
@@ -345,7 +218,6 @@ export async function focusEditor() {
 		if (!view) {
 			throw new Error("No active markdown view");
 		}
-
 		view.editor.focus();
 	});
 }
@@ -355,22 +227,6 @@ export async function typeText(text, recorder) {
 		await browser.keys(char);
 		await recorder.captureAndPause(HUMAN_KEY_DELAY_MS);
 	}
-}
-
-export async function captureKeyPress(recorder, label, durationMs = 650) {
-	await browser.execute((text) => {
-		const overlay = document.getElementById("natural-link-demo-key-overlay");
-		if (!overlay) return;
-		overlay.textContent = text;
-		overlay.style.display = "block";
-	}, label);
-	await recorder.captureAndPause(durationMs);
-	await browser.execute(() => {
-		const overlay = document.getElementById("natural-link-demo-key-overlay");
-		if (!overlay) return;
-		overlay.textContent = "";
-		overlay.style.display = "none";
-	});
 }
 
 export async function openModal() {
@@ -387,10 +243,30 @@ export async function expectModalPlaceholder(locale) {
 	assert.equal(await input.getAttribute("placeholder"), LOCALE_TEXT[locale].modalPlaceholder);
 }
 
+/**
+ * Wait for the selection to settle on the expected suggestion.
+ *
+ * Search results arrive asynchronously and the first painted item is often not
+ * the final one, so asserting immediately after the element appears would check
+ * an intermediate state — and, worse, a screenshot taken right after would show
+ * it.
+ */
 export async function expectSelectedSuggestionText(text) {
-	const suggestion = await $(SELECTED_SUGGESTION_SELECTOR);
-	await suggestion.waitForDisplayed({ timeout: 1000 });
-	assert.match(await suggestion.getText(), new RegExp(text));
+	const expected = new RegExp(text);
+	let lastSeen = null;
+
+	await browser.waitUntil(async () => {
+		const suggestion = await $(SELECTED_SUGGESTION_SELECTOR);
+		if (!(await suggestion.isDisplayed().catch(() => false))) return false;
+		lastSeen = await suggestion.getText();
+		return expected.test(lastSeen);
+	}, {
+		timeout: 5000,
+		interval: 50,
+		timeoutMsg: `Expected selected suggestion to match ${expected}, last seen: ${lastSeen}`,
+	});
+
+	assert.match(lastSeen, expected);
 }
 
 export async function expectHeadingBadge(locale) {

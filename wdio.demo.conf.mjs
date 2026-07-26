@@ -1,35 +1,65 @@
-import path from "node:path";
-import process from "node:process";
+/**
+ * Demo capture: README screenshots and GIF frames, byte-reproducible.
+ *
+ * Separate from `wdio.conf.mjs` because everything here trades speed for
+ * determinism — pinned Obsidian version, fixed rendering flags, stable vault
+ * path. See `agents/template/demo-workflow.md` for the full methodology.
+ */
+import path from 'node:path';
+import { DETERMINISTIC_CHROME_OPTIONS } from './obsidian-tests/lib/chrome-options.mjs';
+import { patchLauncherForStableVault } from './obsidian-tests/lib/launcher-patch.mjs';
+import {
+	resolveObsidianVersions,
+	resolvePluginRoot,
+	resolveSpecs,
+	resolveVault,
+} from './scripts/obsidian-version.mjs';
 
-const cacheDir = path.resolve(".obsidian-cache");
-const obsidianVersion = process.env.OBSIDIAN_TEST_VERSION ?? "latest";
-const installerVersion = process.env.OBSIDIAN_INSTALLER_VERSION ?? "latest";
+patchLauncherForStableVault();
+
+const cacheDir = path.resolve('.obsidian-cache');
+const { obsidianVersion, installerVersion } = resolveObsidianVersions();
 
 export const config = {
-	runner: "local",
-	framework: "mocha",
-	specs: ["./obsidian-tests/demo/demo.e2e.mjs"],
+	runner: 'local',
+	framework: 'mocha',
+	specs: resolveSpecs(
+		'obsidian-tests/demo',
+		'./obsidian-tests/demo/**/*.e2e.mjs',
+		'./obsidian-tests/fixture-plugin/demo/**/*.e2e.mjs',
+	),
 	maxInstances: 1,
 	capabilities: [
 		{
-			browserName: "obsidian",
+			browserName: 'obsidian',
 			browserVersion: obsidianVersion,
-			"wdio:obsidianOptions": {
+			'wdio:obsidianOptions': {
 				installerVersion,
-				plugins: ["."],
-				vault: "./obsidian-tests/demo-vaults/en",
+				plugins: [resolvePluginRoot()],
+				// Plugins name their demo vault differently; the first one that
+				// exists wins. Multi-locale suites usually override the vault
+				// per spec via `browser.reloadObsidian({ vault })` anyway.
+				vault: resolveVault(
+					'./obsidian-tests/demo-vault',
+					'./obsidian-tests/demo-vaults/en',
+					'./obsidian-tests/fixture-plugin/vault',
+				),
 			},
+			'goog:chromeOptions': DETERMINISTIC_CHROME_OPTIONS,
 		},
 	],
-	services: ["obsidian"],
-	reporters: ["obsidian"],
+	services: ['obsidian'],
+	reporters: ['obsidian'],
 	mochaOpts: {
-		ui: "bdd",
+		ui: 'bdd',
 		timeout: 180000,
 	},
-	waitforInterval: 250,
-	waitforTimeout: 20000,
-	logLevel: "info",
+	waitforInterval: 50,
+	// Demo scenarios wait for UI states to settle before capturing; being
+	// impatient here produces screenshots of intermediate states, which is worse
+	// than a slow run.
+	waitforTimeout: 5000,
+	logLevel: 'info',
 	injectGlobals: false,
 	cacheDir,
 };

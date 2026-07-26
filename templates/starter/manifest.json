@@ -1,0 +1,9 @@
+{
+	"id": "{{PLUGIN_ID}}",
+	"name": "{{PLUGIN_NAME}}",
+	"version": "0.0.1-pre-release",
+	"minAppVersion": "{{MIN_APP_VERSION}}",
+	"description": "{{PLUGIN_DESCRIPTION}}",
+	"author": "{{PLUGIN_AUTHOR}}",
+	"isDesktopOnly": false
+}
